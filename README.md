@@ -1,56 +1,85 @@
-# Welcome to your Expo app 👋
+# Orbe
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicativo mobile para gestão de finanças pessoais, desenvolvido com Expo, React Native e TypeScript. O objetivo é reunir rendas, gastos e indicadores em um único lugar para facilitar o acompanhamento do saldo e da evolução financeira.
 
-## Get started
+## Estado atual
 
-1. Install dependencies
+O projeto está na fase inicial de desenvolvimento. Esta versão contém a configuração do Expo, a navegação inicial com Expo Router e uma tela de apresentação. Os módulos de identidade, painel e lançamentos, os componentes compartilhados e os estados de interface possuem apenas arquivos reservados para implementação.
 
-   ```bash
-   npm install
-   ```
+As funcionalidades abaixo fazem parte do escopo planejado; ainda não estão implementadas. Não há integração com backend ou persistência de dados nesta versão.
 
-2. Start the app
+## Funcionalidades planejadas
 
-   ```bash
-   npx expo start
-   ```
+- **Cadastro e autenticação:** criar conta com nome completo, e-mail e confirmação de senha; entrar com e-mail e senha.
+- **Painel financeiro:** consultar saldo disponível, totais de renda e gastos e comprometimento da renda.
+- **Indicadores:** visualizar gastos por categoria, evolução mensal e insight do mês.
+- **Lançamentos recentes:** consultar descrição, categoria, data e valor.
+- **Registro de renda:** informar valor, descrição, categoria e data, com observação opcional. Categorias previstas: Salário, Freelance, Investimento, Benefício e Outros.
+- **Registro de gasto:** informar valor, descrição, categoria, data e forma de pagamento, com observação opcional. Formas previstas: Pix, Débito, Crédito e Dinheiro.
+- **Estados do painel:** apresentar carregamento, ausência de dados e erro, com ação para tentar novamente.
 
-In the output, you'll find options to open the app in a
+## Tecnologias
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Expo SDK 58
+- React Native 0.88 e React 19.3
+- TypeScript com verificação estrita
+- Expo Router para navegação baseada em arquivos
+- npm com lockfile versionado
 
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## Executar localmente
 
-## Get a fresh project
-
-When you're ready, run:
+Instale uma versão do Node.js compatível com as dependências do projeto e o npm.
 
 ```bash
-npm run reset-project
+git clone https://github.com/marcelobelisario/orbe.git
+cd orbe
+npm ci
+npm start
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+O Expo CLI apresenta as opções para abrir o aplicativo em um dispositivo ou emulador compatível. Também estão disponíveis:
 
-### Other setup steps
+| Comando | Finalidade |
+| --- | --- |
+| `npm start` | Iniciar o servidor de desenvolvimento |
+| `npm run android` | Iniciar o Expo e abrir no Android |
+| `npm run ios` | Iniciar o Expo e abrir no simulador iOS, no macOS |
+| `npm run web` | Iniciar a versão web de desenvolvimento |
+| `npm run typecheck` | Verificar os tipos sem gerar arquivos |
+| `npm run lint` | Executar o fluxo de lint do Expo |
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+A configuração e as dependências de ESLint ainda não estão versionadas. Na primeira execução de `npm run lint`, o Expo poderá solicitar sua instalação e configuração.
 
-## Learn more
+## Organização do código
 
-To learn more about developing your project with Expo, look at the following resources:
+| Caminho | Conteúdo |
+| --- | --- |
+| `src/app/` | Rotas e layout de navegação; tela inicial em `index.tsx` |
+| `src/components/` | Arquivos reservados para componentes compartilhados |
+| `src/modules/` | Estrutura reservada para identidade, painel e novos lançamentos |
+| `src/states/` | Arquivos reservados para estados de carregamento e erro |
+| `docs/` | Documentação de requisitos e diagrama de casos de uso |
+| `assets/` | Recursos visuais ainda sem uso na configuração do aplicativo |
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Mantenha apenas rotas e layouts dentro de `src/app/`. Componentes e lógica dos módulos devem ficar fora desse diretório.
 
-## Join the community
+Ícones, favicon e imagem de splash personalizados não estão configurados nesta etapa.
 
-Join our community of developers creating universal apps.
+## Documentação
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- [Requisitos funcionais](docs/Documentacao_App_Financeiro.docx)
+- [Diagrama de casos de uso](docs/DCU.png)
+- [Arquivo editável do diagrama](docs/DCU_App_Financeiro.asta)
+- [Protótipo no Figma](https://www.figma.com/design/rSNsOGpKdQimT3FrZLTmyI/MobilePrototipo?node-id=0-1)
+
+A documentação e o protótipo originais podem usar o nome anterior **Finora**. O nome atual do projeto é **Orbe**.
+
+## Equipe
+
+- João Victor Souza
+- Luiz Henrique Balieiro
+- Marcelo Augusto Belisário
+
+## Contribuição
+
+Antes de alterar o projeto, consulte [AGENTS.md](AGENTS.md). Execute a verificação de tipos e o lint antes de enviar alterações. Para adicionar bibliotecas, utilize `npx expo install <pacote>` para resolver versões compatíveis com o SDK.
