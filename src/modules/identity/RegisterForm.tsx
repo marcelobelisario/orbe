@@ -104,6 +104,7 @@ export function RegisterForm({onSuccess}: RegisterFormProps) {
         accessibilityRole="checkbox"
         accessibilityLabel="Concordo com os Termos de Uso e a Política de Privacidade"
         accessibilityState={{checked: termsAccepted}}
+        aria-checked={termsAccepted}
         onPress={() => {
           setTermsAccepted((accepted) => !accepted);
           clearError("termsAccepted");
