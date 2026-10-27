@@ -4,9 +4,13 @@ Aplicativo mobile para gestão de finanças pessoais, desenvolvido com Expo, Rea
 
 ## Estado atual
 
-O projeto está na fase inicial de desenvolvimento. Esta versão contém a configuração do Expo, a navegação inicial com Expo Router e uma tela de apresentação. Os módulos de identidade, painel e lançamentos, os componentes compartilhados e os estados de interface possuem apenas arquivos reservados para implementação.
+O projeto está na fase inicial de desenvolvimento. A tela inicial exibe um dashboard com saldo, renda, gastos, comprometimento da renda, distribuição por categoria, evolução mensal, lançamentos recentes e um insight calculado. O painel utiliza dados fictícios locais, sem integração com backend ou persistência. O seletor de mês começa no mês atual e atualiza os indicadores conforme o período escolhido.
 
-As funcionalidades abaixo fazem parte do escopo planejado; ainda não estão implementadas. Não há integração com backend ou persistência de dados nesta versão.
+A implementação do [dashboard](src/modules/dashboard/README.md) utiliza cálculos simples com arrays e `react-native-gifted-charts` para os gráficos. Toque no avatar para alterar o tema, no olhinho para ocultar os valores e em “Ver todos” para abrir o extrato completo. Os módulos de identidade e cadastro de lançamentos e os estados de carregamento e erro ainda não estão implementados.
+
+A biblioteca em [`src/components/`](src/components/README.md) inclui botões, campos de formulário, seleção de categorias, ícones, ícones animados e barra de progresso. Todos acompanham os temas claro, escuro e automático.
+
+As funcionalidades abaixo descrevem o escopo completo. O painel e seus indicadores já possuem uma demonstração com dados locais; autenticação, cadastro, persistência e integração ainda estão planejados.
 
 ## Funcionalidades planejadas
 
@@ -48,15 +52,18 @@ O Expo CLI apresenta as opções para abrir o aplicativo em um dispositivo ou em
 | `npm run typecheck` | Verificar os tipos sem gerar arquivos |
 | `npm run lint` | Executar o fluxo de lint do Expo |
 
-A configuração e as dependências de ESLint ainda não estão versionadas. Na primeira execução de `npm run lint`, o Expo poderá solicitar sua instalação e configuração.
+O ESLint utiliza a configuração recomendada pelo Expo, versionada em `eslint.config.js`.
 
 ## Organização do código
 
 | Caminho | Conteúdo |
 | --- | --- |
 | `src/app/` | Rotas e layout de navegação; tela inicial em `index.tsx` |
-| `src/components/` | Arquivos reservados para componentes compartilhados |
-| `src/modules/` | Estrutura reservada para identidade, painel e novos lançamentos |
+| `src/components/` | Componentes compartilhados e exemplos de uso na documentação |
+| `src/theme/` | Paletas clara e escura, tipografia e preferência de tema |
+| `src/data/` | Dados financeiros de exemplo compartilhados entre as telas |
+| `src/contexts/` | Visibilidade de valores compartilhada entre dashboard e extrato |
+| `src/modules/` | Dashboard implementado e estrutura reservada para identidade e novos lançamentos |
 | `src/states/` | Arquivos reservados para estados de carregamento e erro |
 | `docs/` | Documentação de requisitos e diagrama de casos de uso |
 | `assets/` | Recursos visuais ainda sem uso na configuração do aplicativo |
