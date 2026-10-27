@@ -8,6 +8,8 @@ As regras de cadastro ficam em `validation.ts`: nome e sobrenome, e-mail válido
 
 Os formulários são demonstrações locais: não cadastram usuários, não autenticam credenciais e não persistem ou enviam dados. A tela que os utiliza define o comportamento de `onSuccess`.
 
+A rota `/` reúne as abas de login e cadastro. O login validado, o cadastro validado e o botão de demonstração usam `router.replace("/dashboard")`. O painel continua disponível em `/dashboard` e o extrato em `/statement`, sob os mesmos provedores de tema e visibilidade. A recuperação valida o e-mail e informa que nenhum envio ocorreu na demonstração. A opção de lembrar credenciais será adicionada quando houver autenticação e persistência.
+
 Validação:
 
 ```sh
