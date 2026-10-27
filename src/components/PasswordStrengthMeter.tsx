@@ -1,102 +1,36 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { colors } from "../theme/colors";
+import {StyleSheet, Text, View} from "react-native";
+import {useTheme} from "@/theme/themeProvider";
+import {fonts} from "@/theme/tokens";
+import {getPasswordStrength, MIN_PASSWORD_LENGTH} from "@/modules/identity/validation";
 
-interface PasswordStrengthMeterProps {
-  password: string;
-}
-
-export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
-  password,
-}) => {
+export function PasswordStrengthMeter({password}: {password: string}) {
+  const {colors} = useTheme();
   if (!password) return null;
-
-  // Critérios
-  const hasMinLength = password.length >= 8;
-  const hasNumber = /\d/.test(password);
-  const hasSpecialOrUpper = /[A-Z!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
-
-  let score = 0;
-  if (password.length >= 6) score += 1;
-  if (hasMinLength && (hasNumber || hasSpecialOrUpper)) score += 1;
-  if (hasMinLength && hasNumber && hasSpecialOrUpper) score += 1;
-
-  const getStrengthLabel = () => {
-    switch (score) {
-      case 1:
-        return { text: "Senha fraca", color: colors.expense };
-      case 2:
-        return { text: "Senha média", color: colors.warning };
-      case 3:
-        return { text: "Senha forte e segura", color: colors.primary };
-      default:
-        return { text: "Muito curta", color: colors.expense };
-    }
-  };
-
-  const strength = getStrengthLabel();
-
+  const score = getPasswordStrength(password);
+  const label = ["Muito curta", "Senha fraca", "Senha média", "Senha forte"][score];
+  const color = score < 2 ? colors.expense : score === 2 ? colors.muted : colors.income;
   return (
     <View style={styles.container}>
-      <View style={styles.barsRow}>
-        <View
-          style={[
-            styles.bar,
-            score >= 1 && { backgroundColor: strength.color },
-          ]}
-        />
-        <View
-          style={[
-            styles.bar,
-            score >= 2 && { backgroundColor: strength.color },
-          ]}
-        />
-        <View
-          style={[
-            styles.bar,
-            score >= 3 && { backgroundColor: strength.color },
-          ]}
-        />
+      <View style={styles.bars} accessibilityLabel={`Força da senha: ${label}`}>
+        {[1, 2, 3].map((level) => (
+          <View
+            key={level}
+            style={[styles.bar, {backgroundColor: score >= level ? color : colors.border}]}
+          />
+        ))}
       </View>
-
-      <View style={styles.infoRow}>
-        <Text style={[styles.strengthText, { color: strength.color }]}>
-          {strength.text}
-        </Text>
-        <Text style={styles.hintText}>Mín. 8 caracteres, números e símbolos</Text>
-      </View>
+      <Text style={[styles.label, {color}]}>{label}</Text>
+      <Text style={[styles.hint, {color: colors.muted}]}>
+        Mínimo de {MIN_PASSWORD_LENGTH} caracteres. Números e símbolos aumentam a força.
+      </Text>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: -8,
-    marginBottom: 14,
-  },
-  barsRow: {
-    flexDirection: "row",
-    gap: 6,
-    height: 4,
-    marginBottom: 6,
-  },
-  bar: {
-    flex: 1,
-    height: "100%",
-    borderRadius: 2,
-    backgroundColor: colors.inputBorder,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  strengthText: {
-    fontSize: 11,
-    fontWeight: "700",
-  },
-  hintText: {
-    fontSize: 11,
-    color: colors.textMuted,
-  },
+  container: {gap: 6},
+  bars: {flexDirection: "row", gap: 6},
+  bar: {flex: 1, height: 4, borderRadius: 2},
+  label: {fontFamily: fonts.semibold, fontSize: 12},
+  hint: {fontFamily: fonts.regular, fontSize: 12, lineHeight: 18},
 });
