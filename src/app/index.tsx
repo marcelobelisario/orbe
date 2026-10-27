@@ -1,17 +1,6 @@
-import { Text, View, StyleSheet } from "react-native";
+import React from "react";
+import IdentityScreen from "../modules/identity";
 
 export default function Index() {
-  return (
-    <View style={styles.container}>
-      <Text>Orbe — Gestão de finanças pessoais</Text>
-    </View>
-  );
+  return <IdentityScreen />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
