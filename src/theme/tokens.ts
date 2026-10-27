@@ -14,6 +14,9 @@ export const darkColors = {
   expenseSurface: "rgba(244,63,94,0.1)",
   onExpense: "#ffffff",
   disabledText: "#3a4066",
+  // tokens usados nas telas de novo lançamento
+  inputBackground: "#141720",
+  disabled: "#202536",
 };
 
 export type ThemeColors = { [Key in keyof typeof darkColors]: string };
@@ -34,6 +37,8 @@ export const lightColors: ThemeColors = {
   expenseSurface: "#fff0f3",
   onExpense: "#ffffff",
   disabledText: "#68748b",
+  inputBackground: "#ffffff",
+  disabled: "#E2E7F0",
 };
 
 export const fonts = {

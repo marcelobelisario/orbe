@@ -1,11 +1,11 @@
-import {useState, type PropsWithChildren} from "react";
-import {Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
-import {LinearGradient} from "expo-linear-gradient";
-import {LineChart, PieChart} from "react-native-gifted-charts";
-import {router} from "expo-router";
 import MonthSelect from "@/components/monthSelect";
-import {formatMonth, getDashboardSummary, getMonthKey, getMonthOptions} from "./summary";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
+import { useState, type PropsWithChildren } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
+import { LineChart, PieChart } from "react-native-gifted-charts";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { formatMonth, getDashboardSummary, getMonthKey, getMonthOptions } from "./summary";
 
 import {
     Btn,
@@ -15,24 +15,24 @@ import {
     TransactionItem,
     ValueVisibilityButton,
 } from "@/components";
-import {useValueVisibility} from "@/contexts/valueVisibility";
-import {useTheme} from "@/theme/themeProvider";
-import {fonts, radii} from "@/theme/tokens";
-import {categories, formatMoney, transactions} from "@/data/finance";
+import { useValueVisibility } from "@/contexts/valueVisibility";
+import { categories, formatMoney, transactions } from "@/data/finance";
+import { useTheme } from "@/theme/themeProvider";
+import { fonts, radii } from "@/theme/tokens";
 
-function Card({children}: PropsWithChildren) {
-    const {colors} = useTheme();
+function Card({ children }: PropsWithChildren) {
+    const { colors } = useTheme();
     return (
-        <View style={[styles.card, {backgroundColor: colors.surface, borderColor: colors.border}]}>
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             {children}
         </View>
     );
 }
 
 export default function Dashboard() {
-    const {colors} = useTheme();
-    const {width, fontScale} = useWindowDimensions();
-    const {valuesVisible} = useValueVisibility();
+    const { colors } = useTheme();
+    const { width, fontScale } = useWindowDimensions();
+    const { valuesVisible } = useValueVisibility();
     const compact = width < 360 || fontScale > 1.3;
     const [showTheme, setShowTheme] = useState(false);
     const [chartWidth, setChartWidth] = useState(0);
@@ -41,7 +41,7 @@ export default function Dashboard() {
 
     // Todos os indicadores usam somente os lançamentos do mês selecionado.
     const summary = getDashboardSummary(transactions, selectedMonth);
-    const {income, expenses, balance, commitment, incomeChange, expenseChange} = summary;
+    const { income, expenses, balance, commitment, incomeChange, expenseChange } = summary;
     const previousMonthLabel = formatMonth(summary.previousMonth).toLowerCase();
     const percentage = valuesVisible
         ? commitment === null
@@ -63,12 +63,12 @@ export default function Dashboard() {
     const displayMoney = (amount: number) => (valuesVisible ? formatMoney(amount) : "••••");
 
     return (
-        <SafeAreaView style={[styles.screen, {backgroundColor: colors.background}]}>
+        <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.content}>
                     <View style={styles.header}>
                         <View style={styles.flex}>
-                            <Text style={[styles.body, {color: colors.muted}]}>
+                            <Text style={[styles.body, { color: colors.muted }]}>
                                 Bom dia, João 👋
                             </Text>
                             <MonthSelect
@@ -80,15 +80,15 @@ export default function Dashboard() {
                         <View style={styles.headerActions}>
                             <Btn
                                 size="icon"
-                                icon={<Icon name="plus" color={colors.disabledText} />}
-                                disabled
+                                icon={<Icon name="plus" color={colors.text} />}
+                                onPress={() => router.push('/new-entry/select')}
                                 accessibilityRole="button"
-                                accessibilityLabel="Adicionar lançamento, em breve"
+                                accessibilityLabel="Adicionar lançamento"
                             />
                             <Pressable
                                 accessibilityRole="button"
                                 accessibilityLabel="Alterar tema"
-                                accessibilityState={{expanded: showTheme}}
+                                accessibilityState={{ expanded: showTheme }}
                                 aria-expanded={showTheme}
                                 onPress={() => setShowTheme(!showTheme)}
                                 hitSlop={4}
@@ -105,7 +105,7 @@ export default function Dashboard() {
                     {showTheme && <ThemeToggle />}
                     {summary.entries.length === 0 && (
                         <Card>
-                            <Text style={[styles.body, {color: colors.muted}]}>
+                            <Text style={[styles.body, { color: colors.muted }]}>
                                 Nenhum lançamento em {formatMonth(selectedMonth).toLowerCase()}.
                             </Text>
                         </Card>
@@ -113,8 +113,8 @@ export default function Dashboard() {
 
                     <LinearGradient
                         colors={[colors.primary, "#0f766e"]}
-                        start={{x: 0, y: 0}}
-                        end={{x: 1, y: 1}}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
                         style={styles.balanceCard}
                     >
                         <View pointerEvents="none" style={styles.topCircle} />
@@ -167,18 +167,18 @@ export default function Dashboard() {
                             >
                                 <View style={styles.summaryLabel}>
                                     <View
-                                        style={[styles.arrow, {backgroundColor: item.background}]}
+                                        style={[styles.arrow, { backgroundColor: item.background }]}
                                     >
-                                        <Text style={{color: item.color}}>{item.arrow}</Text>
+                                        <Text style={{ color: item.color }}>{item.arrow}</Text>
                                     </View>
-                                    <Text style={[styles.caption, {color: colors.muted}]}>
+                                    <Text style={[styles.caption, { color: colors.muted }]}>
                                         {item.label}
                                     </Text>
                                 </View>
-                                <Text style={[styles.summaryValue, {color: item.color}]}>
+                                <Text style={[styles.summaryValue, { color: item.color }]}>
                                     {displayMoney(item.total)}
                                 </Text>
-                                <Text style={[styles.caption, {color: colors.muted}]}>
+                                <Text style={[styles.caption, { color: colors.muted }]}>
                                     {valuesVisible
                                         ? item.change === null
                                             ? "Sem base de comparação"
@@ -191,10 +191,10 @@ export default function Dashboard() {
 
                     <Card>
                         <View style={styles.sectionHeader}>
-                            <Text style={[styles.sectionTitle, styles.flex, {color: colors.text}]}>
+                            <Text style={[styles.sectionTitle, styles.flex, { color: colors.text }]}>
                                 Comprometimento da renda
                             </Text>
-                            <Text style={[styles.percentage, {color: colors.income}]}>
+                            <Text style={[styles.percentage, { color: colors.income }]}>
                                 {percentage}
                             </Text>
                         </View>
@@ -206,12 +206,12 @@ export default function Dashboard() {
                             />
                         ) : (
                             <View
-                                style={[styles.hiddenProgress, {backgroundColor: colors.border}]}
+                                style={[styles.hiddenProgress, { backgroundColor: colors.border }]}
                             />
                         )}
                         <View style={styles.sectionHeader}>
                             {["0%", "Meta: ≤ 50%", "100%"].map((label) => (
-                                <Text key={label} style={[styles.caption, {color: colors.muted}]}>
+                                <Text key={label} style={[styles.caption, { color: colors.muted }]}>
                                     {label}
                                 </Text>
                             ))}
@@ -221,12 +221,12 @@ export default function Dashboard() {
                     <Card>
                         <Text
                             accessibilityRole="header"
-                            style={[styles.sectionTitle, {color: colors.text}]}
+                            style={[styles.sectionTitle, { color: colors.text }]}
                         >
                             Distribuição por categoria
                         </Text>
                         {distribution.length === 0 ? (
-                            <Text style={[styles.emptyText, {color: colors.muted}]}>
+                            <Text style={[styles.emptyText, { color: colors.muted }]}>
                                 Nenhum gasto neste mês.
                             </Text>
                         ) : (
@@ -251,7 +251,7 @@ export default function Dashboard() {
                                             strokeColor={colors.surface}
                                         />
                                     ) : (
-                                        <Text style={[styles.caption, {color: colors.muted}]}>
+                                        <Text style={[styles.caption, { color: colors.muted }]}>
                                             Valores ocultos
                                         </Text>
                                     )}
@@ -260,20 +260,20 @@ export default function Dashboard() {
                                     {distribution.map((item) => (
                                         <View key={item.name} style={styles.legendRow}>
                                             <View
-                                                style={[styles.dot, {backgroundColor: item.color}]}
+                                                style={[styles.dot, { backgroundColor: item.color }]}
                                             />
                                             <Text
                                                 numberOfLines={1}
                                                 style={[
                                                     styles.caption,
                                                     styles.flex,
-                                                    {color: colors.muted},
+                                                    { color: colors.muted },
                                                 ]}
                                             >
                                                 {item.name}
                                             </Text>
                                             <Text
-                                                style={[styles.legendValue, {color: colors.text}]}
+                                                style={[styles.legendValue, { color: colors.text }]}
                                             >
                                                 {displayMoney(item.value)}
                                             </Text>
@@ -287,7 +287,7 @@ export default function Dashboard() {
                     <Card>
                         <Text
                             accessibilityRole="header"
-                            style={[styles.sectionTitle, {color: colors.text}]}
+                            style={[styles.sectionTitle, { color: colors.text }]}
                         >
                             Evolução mensal
                         </Text>
@@ -299,11 +299,11 @@ export default function Dashboard() {
                             accessibilityLabel={
                                 valuesVisible
                                     ? months
-                                          .map(
-                                              (month) =>
-                                                  `${formatMonth(month.key)}: renda ${formatMoney(month.income)}, gastos ${formatMoney(month.expenses)}`,
-                                          )
-                                          .join(". ")
+                                        .map(
+                                            (month) =>
+                                                `${formatMonth(month.key)}: renda ${formatMoney(month.income)}, gastos ${formatMoney(month.expenses)}`,
+                                        )
+                                        .join(". ")
                                     : "Valores ocultos"
                             }
                         >
@@ -344,8 +344,8 @@ export default function Dashboard() {
                                     formatYLabel={(label) =>
                                         `${Number(label) / 1000}k`.replace(".", ",")
                                     }
-                                    yAxisTextStyle={[styles.chartLabel, {color: colors.muted}]}
-                                    xAxisLabelTextStyle={[styles.chartLabel, {color: colors.muted}]}
+                                    yAxisTextStyle={[styles.chartLabel, { color: colors.muted }]}
+                                    xAxisLabelTextStyle={[styles.chartLabel, { color: colors.muted }]}
                                     xAxisColor={colors.border}
                                     yAxisColor="transparent"
                                     rulesColor={colors.border}
@@ -353,24 +353,24 @@ export default function Dashboard() {
                                 />
                             )}
                             {!valuesVisible && (
-                                <Text style={[styles.caption, {color: colors.muted}]}>
+                                <Text style={[styles.caption, { color: colors.muted }]}>
                                     Valores ocultos
                                 </Text>
                             )}
                             {valuesVisible && !hasHistory && (
-                                <Text style={[styles.caption, {color: colors.muted}]}>
+                                <Text style={[styles.caption, { color: colors.muted }]}>
                                     Nenhum lançamento neste período.
                                 </Text>
                             )}
                         </View>
                         <View style={styles.chartLegend}>
                             <View style={styles.summaryLabel}>
-                                <View style={[styles.dot, {backgroundColor: colors.income}]} />
-                                <Text style={[styles.caption, {color: colors.muted}]}>Renda</Text>
+                                <View style={[styles.dot, { backgroundColor: colors.income }]} />
+                                <Text style={[styles.caption, { color: colors.muted }]}>Renda</Text>
                             </View>
                             <View style={styles.summaryLabel}>
-                                <View style={[styles.dot, {backgroundColor: colors.expense}]} />
-                                <Text style={[styles.caption, {color: colors.muted}]}>Gastos</Text>
+                                <View style={[styles.dot, { backgroundColor: colors.expense }]} />
+                                <Text style={[styles.caption, { color: colors.muted }]}>Gastos</Text>
                             </View>
                         </View>
                     </Card>
@@ -379,7 +379,7 @@ export default function Dashboard() {
                         <View style={styles.sectionHeader}>
                             <Text
                                 accessibilityRole="header"
-                                style={[styles.sectionTitle, styles.flex, {color: colors.text}]}
+                                style={[styles.sectionTitle, styles.flex, { color: colors.text }]}
                             >
                                 Últimos lançamentos
                             </Text>
@@ -389,14 +389,14 @@ export default function Dashboard() {
                                 onPress={() => router.push("/statement")}
                                 hitSlop={8}
                             >
-                                <Text style={[styles.link, {color: colors.primary}]}>
+                                <Text style={[styles.link, { color: colors.primary }]}>
                                     Ver todos
                                 </Text>
                             </Pressable>
                         </View>
                         <View style={styles.transactions}>
                             {visibleTransactions.length === 0 && (
-                                <Text style={[styles.body, {color: colors.muted}]}>
+                                <Text style={[styles.body, { color: colors.muted }]}>
                                     Nenhum lançamento neste mês.
                                 </Text>
                             )}
@@ -411,27 +411,26 @@ export default function Dashboard() {
                             <View
                                 style={[
                                     styles.transactionIcon,
-                                    {backgroundColor: colors.incomeSurface},
+                                    { backgroundColor: colors.incomeSurface },
                                 ]}
                             >
                                 <Icon emoji="✨" size={16} />
                             </View>
                             <View style={styles.flex}>
-                                <Text style={[styles.insightTitle, {color: colors.muted}]}>
+                                <Text style={[styles.insightTitle, { color: colors.muted }]}>
                                     INSIGHT DO MÊS
                                 </Text>
-                                <Text style={[styles.insightText, {color: colors.text}]}>
+                                <Text style={[styles.insightText, { color: colors.text }]}>
                                     {!valuesVisible
                                         ? "Mostre os valores para consultar o resumo do mês."
                                         : summary.entries.length === 0
-                                          ? "Registre lançamentos neste mês para acompanhar suas finanças."
-                                          : commitment === null
-                                            ? "Há gastos registrados, mas nenhuma renda neste mês."
-                                            : `Você utilizou ${percentage} da renda. ${
-                                                  commitment <= 50
-                                                      ? "Seus gastos estão abaixo da meta de 50%."
-                                                      : "Seus gastos ultrapassaram a meta de 50%."
-                                              }`}
+                                            ? "Registre lançamentos neste mês para acompanhar suas finanças."
+                                            : commitment === null
+                                                ? "Há gastos registrados, mas nenhuma renda neste mês."
+                                                : `Você utilizou ${percentage} da renda. ${commitment <= 50
+                                                    ? "Seus gastos estão abaixo da meta de 50%."
+                                                    : "Seus gastos ultrapassaram a meta de 50%."
+                                                }`}
                                 </Text>
                             </View>
                         </View>
@@ -443,26 +442,26 @@ export default function Dashboard() {
 }
 
 const styles = StyleSheet.create({
-    screen: {flex: 1},
+    screen: { flex: 1 },
     scrollContent: {
         alignItems: "center",
         paddingHorizontal: 24,
         paddingTop: 16,
         paddingBottom: 32,
     },
-    content: {width: "100%", maxWidth: 440, gap: 20},
-    flex: {flex: 1, minWidth: 0},
-    column: {flexDirection: "column"},
+    content: { width: "100%", maxWidth: 440, gap: 20 },
+    flex: { flex: 1, minWidth: 0 },
+    column: { flexDirection: "column" },
     header: {
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
         minHeight: 62,
     },
-    headerActions: {flexDirection: "row", alignItems: "center", gap: 8},
-    body: {fontFamily: fonts.regular, fontSize: 14, lineHeight: 20},
-    caption: {fontFamily: fonts.regular, fontSize: 12, lineHeight: 16},
-    emptyText: {fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, marginTop: 16},
+    headerActions: { flexDirection: "row", alignItems: "center", gap: 8 },
+    body: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20 },
+    caption: { fontFamily: fonts.regular, fontSize: 12, lineHeight: 16 },
+    emptyText: { fontFamily: fonts.regular, fontSize: 14, lineHeight: 20, marginTop: 16 },
     avatar: {
         width: 36,
         height: 36,
@@ -470,8 +469,8 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    avatarText: {fontFamily: fonts.semibold, fontSize: 14, color: "#ffffff"},
-    balanceCard: {padding: 24, borderRadius: radii.card, overflow: "hidden"},
+    avatarText: { fontFamily: fonts.semibold, fontSize: 14, color: "#ffffff" },
+    balanceCard: { padding: 24, borderRadius: radii.card, overflow: "hidden" },
     topCircle: {
         position: "absolute",
         width: 160,
@@ -524,7 +523,7 @@ const styles = StyleSheet.create({
         lineHeight: 28,
         color: "#ffffff",
     },
-    summaryRow: {flexDirection: "row", gap: 16},
+    summaryRow: { flexDirection: "row", gap: 16 },
     summaryCard: {
         flex: 1,
         minWidth: 0,
@@ -532,7 +531,7 @@ const styles = StyleSheet.create({
         borderRadius: radii.card,
         padding: 16,
     },
-    summaryLabel: {flexDirection: "row", alignItems: "center", gap: 8},
+    summaryLabel: { flexDirection: "row", alignItems: "center", gap: 8 },
     arrow: {
         width: 28,
         height: 28,
@@ -547,21 +546,21 @@ const styles = StyleSheet.create({
         marginTop: 12,
         marginBottom: 4,
     },
-    card: {padding: 20, borderRadius: radii.card, borderWidth: 1},
+    card: { padding: 20, borderRadius: radii.card, borderWidth: 1 },
     sectionHeader: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
         gap: 8,
     },
-    sectionTitle: {fontFamily: fonts.semibold, fontSize: 14, lineHeight: 20},
+    sectionTitle: { fontFamily: fonts.semibold, fontSize: 14, lineHeight: 20 },
     percentage: {
         fontFamily: fonts.semibold,
         fontSize: 14,
         lineHeight: 20,
         fontVariant: ["tabular-nums"],
     },
-    progress: {marginTop: 12, marginBottom: 8},
+    progress: { marginTop: 12, marginBottom: 8 },
     hiddenProgress: {
         height: 10,
         borderRadius: radii.pill,
@@ -574,26 +573,26 @@ const styles = StyleSheet.create({
         gap: 16,
         marginTop: 16,
     },
-    donut: {width: 120, alignItems: "center"},
-    legend: {flex: 1, alignSelf: "stretch", justifyContent: "center", gap: 10},
-    legendRow: {flexDirection: "row", alignItems: "center", gap: 6},
-    dot: {width: 8, height: 8, borderRadius: 4},
+    donut: { width: 120, alignItems: "center" },
+    legend: { flex: 1, alignSelf: "stretch", justifyContent: "center", gap: 10 },
+    legendRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+    dot: { width: 8, height: 8, borderRadius: 4 },
     legendValue: {
         fontFamily: fonts.regular,
         fontSize: 11,
         lineHeight: 16,
         fontVariant: ["tabular-nums"],
     },
-    chart: {marginTop: 16, minHeight: 160},
-    chartLabel: {fontFamily: fonts.regular, fontSize: 10},
+    chart: { marginTop: 16, minHeight: 160 },
+    chartLabel: { fontFamily: fonts.regular, fontSize: 10 },
     chartLegend: {
         flexDirection: "row",
         justifyContent: "center",
         gap: 24,
         marginTop: 12,
     },
-    link: {fontFamily: fonts.medium, fontSize: 12, lineHeight: 20},
-    transactions: {gap: 12, marginTop: 16},
+    link: { fontFamily: fonts.medium, fontSize: 12, lineHeight: 20 },
+    transactions: { gap: 12, marginTop: 16 },
     transactionIcon: {
         width: 36,
         height: 36,
@@ -601,7 +600,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    insight: {flexDirection: "row", alignItems: "flex-start", gap: 12},
+    insight: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
     insightTitle: {
         fontFamily: fonts.semibold,
         fontSize: 12,

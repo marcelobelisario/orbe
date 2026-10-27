@@ -14,11 +14,11 @@ type ThemeContextValue = {
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
-const subscribeToHydration = () => () => {};
+const subscribeToHydration = () => () => { };
 
 export function ThemeProvider({
-                                children,
-                                initialPreference = "system"
+  children,
+  initialPreference = "system"
 }: PropsWithChildren<{ initialPreference?: ThemePreference }>) {
   const systemTheme = useColorScheme();
 
