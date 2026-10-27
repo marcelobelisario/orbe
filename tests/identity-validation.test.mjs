@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   getPasswordStrength,
   isValidEmail,
+  validateLogin,
   validateRegistration,
 } from "../src/modules/identity/validation.ts";
 
@@ -13,6 +14,12 @@ const valid = {
   confirmPassword: "Senha123!",
   termsAccepted: true,
 };
+
+test("login valida e-mail e o mesmo mínimo de senha do cadastro", () => {
+  assert.deepEqual(validateLogin(" ana@example.com ", "Senha123!"), {});
+  assert.ok(validateLogin("a@", "Senha123!").email);
+  assert.ok(validateLogin("ana@example.com", "1234567").password);
+});
 
 test("cadastro exige nome completo, e-mail válido e aceite explícito", () => {
   assert.deepEqual(validateRegistration(valid), {});

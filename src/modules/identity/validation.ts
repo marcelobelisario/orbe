@@ -4,6 +4,15 @@ export function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+export function validateLogin(email: string, password: string) {
+  const errors: {email?: string; password?: string} = {};
+  if (!isValidEmail(email)) errors.email = "Informe um e-mail válido";
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    errors.password = `Use ao menos ${MIN_PASSWORD_LENGTH} caracteres`;
+  }
+  return errors;
+}
+
 export type Registration = {
   fullName: string;
   email: string;

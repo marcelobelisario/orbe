@@ -5,7 +5,7 @@ Implementação didática do painel do protótipo, com dados fictícios locais.
 - `index.tsx`: tela, cálculos e estilos. Usa componentes compartilhados e `react-native-gifted-charts` para a rosca e o gráfico de evolução.
 - `summary.ts`: funções de filtro por mês/ano, totais, comparação e histórico mensal.
 - `src/data/finance.ts`: dados de exemplo compartilhados pelo dashboard e pelo extrato. Dinheiro é armazenado em centavos e formatado em reais apenas na exibição.
-- `src/app/index.tsx`: disponibiliza a tela pelo Expo Router.
+- `src/app/dashboard.tsx`: disponibiliza a tela em `/dashboard` pelo Expo Router. A tela inicial de identidade navega para o painel após validar o formulário ou ao explorar a demonstração.
 
 O seletor começa no mês atual do aparelho e oferece os meses do ano atual e dos anos presentes nos dados. Cada seleção filtra os lançamentos por mês e ano. Os cálculos usam operações básicas de arrays: `filter` separa renda e gastos, `reduce` soma valores e `sort` ordena lançamentos do mais recente para o mais antigo. O saldo corresponde à renda menos os gastos do mês, sem saldo anterior.
 

@@ -4,11 +4,11 @@ Aplicativo mobile para gestão de finanças pessoais, desenvolvido com Expo, Rea
 
 ## Estado atual
 
-O projeto está na fase inicial de desenvolvimento. A tela inicial exibe um dashboard com saldo, renda, gastos, comprometimento da renda, distribuição por categoria, evolução mensal, lançamentos recentes e um insight calculado. O painel utiliza dados fictícios locais, sem integração com backend ou persistência. O seletor de mês começa no mês atual e atualiza os indicadores conforme o período escolhido.
+O projeto está na fase inicial de desenvolvimento. A tela inicial reúne login e cadastro em modo demonstração. Os formulários validados e o botão de demonstração abrem o dashboard, com saldo, renda, gastos, comprometimento da renda, distribuição por categoria, evolução mensal, lançamentos recentes e um insight calculado. O painel utiliza dados fictícios locais, sem integração com backend ou persistência. O seletor de mês começa no mês atual e atualiza os indicadores conforme o período escolhido.
 
-A implementação do [dashboard](src/modules/dashboard/README.md) utiliza cálculos simples com arrays e `react-native-gifted-charts` para os gráficos. Toque no avatar para alterar o tema, no olhinho para ocultar os valores e em “Ver todos” para abrir o extrato completo. Os módulos de identidade e cadastro de lançamentos e os estados de carregamento e erro ainda não estão implementados.
+A implementação do [dashboard](src/modules/dashboard/README.md) utiliza cálculos simples com arrays e `react-native-gifted-charts` para os gráficos. Toque no avatar para alterar o tema, no olhinho para ocultar os valores e em “Ver todos” para abrir o extrato completo. As telas de [identidade](src/modules/identity/README.md) reutilizam os componentes e os temas do painel. A autenticação real, o cadastro de lançamentos e os estados globais de carregamento e erro ainda não estão implementados.
 
-A biblioteca em [`src/components/`](src/components/README.md) inclui botões, campos de formulário, seleção de categorias, ícones, ícones animados e barra de progresso. Todos acompanham os temas claro, escuro e automático.
+A biblioteca em `src/components/` inclui botões, campos de formulário com opção de mostrar senha, seleção de categorias, ícones, ícones animados, logo e indicadores de progresso e força de senha. Todos acompanham os temas claro e escuro.
 
 As funcionalidades abaixo descrevem o escopo completo. O painel e seus indicadores já possuem uma demonstração com dados locais; autenticação, cadastro, persistência e integração ainda estão planejados.
 
@@ -58,12 +58,12 @@ O ESLint utiliza a configuração recomendada pelo Expo, versionada em `eslint.c
 
 | Caminho | Conteúdo |
 | --- | --- |
-| `src/app/` | Rotas e layout de navegação; tela inicial em `index.tsx` |
+| `src/app/` | Rotas e layout; identidade em `/`, painel em `/dashboard` e extrato em `/statement` |
 | `src/components/` | Componentes compartilhados e exemplos de uso na documentação |
 | `src/theme/` | Paletas clara e escura, tipografia e preferência de tema |
 | `src/data/` | Dados financeiros de exemplo compartilhados entre as telas |
 | `src/contexts/` | Visibilidade de valores compartilhada entre dashboard e extrato |
-| `src/modules/` | Dashboard implementado e estrutura reservada para identidade e novos lançamentos |
+| `src/modules/` | Dashboard, extrato e identidade demonstrativa; estrutura reservada para novos lançamentos |
 | `src/states/` | Arquivos reservados para estados de carregamento e erro |
 | `docs/` | Documentação de requisitos e diagrama de casos de uso |
 | `assets/` | Recursos visuais ainda sem uso na configuração do aplicativo |
