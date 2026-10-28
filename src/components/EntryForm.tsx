@@ -79,6 +79,9 @@ export default function EntryForm({ type }: EntryFormProps) {
 
   const amountValue = Number(amount.replace(/\D/g, "")) / 100;
 
+  const formattedAmount = amount ? formatCurrency(amount) : "0,00";
+  const amountInputWidth = Math.max(80, formattedAmount.length * 19);
+
   const canSave =
     amountValue > 0 &&
     description.trim().length > 0 &&
@@ -143,18 +146,33 @@ export default function EntryForm({ type }: EntryFormProps) {
           </Text>
 
           <View style={styles.amountRow}>
-            <Text style={[styles.currencySymbol, { color: accent, fontFamily: fonts.semibold }]}>
-              R$
-            </Text>
-            <TextInput
-              accessibilityLabel="Valor do lançamento em reais"
-              value={amount ? formatCurrency(amount) : "0,00"}
-              onChangeText={(value) => setAmount(value.replace(/\D/g, ""))}
-              keyboardType="numeric"
-              style={[styles.amountInput, { color: colors.text, fontFamily: fonts.heading }]}
-              selectTextOnFocus
-              placeholderTextColor={colors.muted}
-            />
+            <View style={styles.amountValueGroup}>
+              <Text
+                style={[
+                  styles.currencySymbol,
+                  { color: accent, fontFamily: fonts.heading },
+                ]}
+              >
+                R$
+              </Text>
+
+              <TextInput
+                accessibilityLabel="Valor do lançamento em reais"
+                value={formattedAmount}
+                onChangeText={(value) => setAmount(value.replace(/\D/g, ""))}
+                keyboardType="numeric"
+                style={[
+                  styles.amountInput,
+                  {
+                    color: colors.text,
+                    fontFamily: fonts.heading,
+                    width: amountInputWidth,
+                  },
+                ]}
+                selectTextOnFocus
+                underlineColorAndroid="transparent"
+              />
+            </View>
           </View>
         </View>
 
@@ -383,23 +401,32 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   amountRow: {
-    flexDirection: "row",
+    width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    alignSelf: "center",
   },
+
   currencySymbol: {
-    fontSize: 17,
-    fontWeight: "700",
-    marginRight: 5,
+    fontSize: 31,
+    fontWeight: "800",
+    marginRight: 0,
   },
+
   amountInput: {
-    minWidth: 115,
+    width: 80,
     padding: 0,
     fontSize: 31,
     lineHeight: 38,
     fontWeight: "800",
-    textAlign: "center",
+    textAlign: "left",
+    borderWidth: 0,
+    includeFontPadding: false,
+  },
+  amountValueGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
   },
   label: {
     fontSize: 10,
