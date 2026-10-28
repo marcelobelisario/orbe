@@ -23,6 +23,7 @@ function Navigation() {
         <Stack.Screen name="new-entry/select" options={{ headerShown: false }} />
         <Stack.Screen name="new-entry/income" options={{ headerShown: false }} />
         <Stack.Screen name="new-entry/expense" options={{ headerShown: false }} />
+        <Stack.Screen name="error" options={{ title: "Erro", headerShown: false }} />
       </Stack>
     </>
   );
