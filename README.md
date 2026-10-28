@@ -85,6 +85,7 @@ Formulários usam `useState`; lançamentos usam um contexto com um array. Dinhei
 - [Diagrama](docs/DCU.png) e [arquivo editável](docs/DCU_App_Financeiro.asta)
 - [Protótipo Figma](https://www.figma.com/design/rSNsOGpKdQimT3FrZLTmyI/MobilePrototipo?node-id=0-1)
 - GitHub: https://github.com/marcelobelisario/orbe
+- App Android: [em breve]
 
 ## Equipe
 
