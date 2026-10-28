@@ -6,6 +6,8 @@ export type Transaction = {
     type: "income" | "expense";
     date: string;
     amount: number;
+    paymentMethod?: string;
+    notes?: string;
 };
 
 export const transactions: Transaction[] = [
@@ -15,7 +17,7 @@ export const transactions: Transaction[] = [
         category: "Renda",
         emoji: "💼",
         type: "income",
-        date: "2026-09-01",
+        date: "2026-10-01",
         amount: 480000,
     },
     {
@@ -24,7 +26,7 @@ export const transactions: Transaction[] = [
         category: "Alimentação",
         emoji: "🛒",
         type: "expense",
-        date: "2026-09-03",
+        date: "2026-10-03",
         amount: 34250,
     },
     {
@@ -33,7 +35,7 @@ export const transactions: Transaction[] = [
         category: "Transporte",
         emoji: "🚗",
         type: "expense",
-        date: "2026-09-04",
+        date: "2026-10-04",
         amount: 2890,
     },
     {
@@ -42,7 +44,7 @@ export const transactions: Transaction[] = [
         category: "Lazer",
         emoji: "🎬",
         type: "expense",
-        date: "2026-09-05",
+        date: "2026-10-05",
         amount: 5590,
     },
     {
@@ -51,7 +53,7 @@ export const transactions: Transaction[] = [
         category: "Saúde",
         emoji: "💊",
         type: "expense",
-        date: "2026-09-07",
+        date: "2026-10-07",
         amount: 8730,
     },
     {
@@ -60,7 +62,7 @@ export const transactions: Transaction[] = [
         category: "Renda",
         emoji: "💼",
         type: "income",
-        date: "2026-09-10",
+        date: "2026-10-10",
         amount: 120000,
     },
     {
@@ -69,7 +71,7 @@ export const transactions: Transaction[] = [
         category: "Moradia",
         emoji: "🏠",
         type: "expense",
-        date: "2026-09-10",
+        date: "2026-10-10",
         amount: 140000,
     },
 ];
@@ -80,6 +82,9 @@ export const categories = [
     {name: "Saúde", color: "#6366f1"},
     {name: "Transporte", color: "#f59e0b"},
     {name: "Lazer", color: "#f43f5e"},
+    {name: "Educação", color: "#06b6d4"},
+    {name: "Roupas", color: "#a855f7"},
+    {name: "Outros", color: "#94a3b8"},
 ];
 
 const currency = new Intl.NumberFormat("pt-BR", {

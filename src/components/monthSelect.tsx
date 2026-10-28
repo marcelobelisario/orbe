@@ -49,12 +49,7 @@ export default function MonthSelect({value, onChange, options}: MonthSelectProps
                 </Animated.View>
             </Pressable>
 
-            <Modal
-                visible={open}
-                transparent
-                animationType="none"
-                onRequestClose={() => setOpen(false)}
-            >
+            <Modal visible={open} transparent animationType="none" onRequestClose={() => setOpen(false)}>
                 <View style={styles.overlay}>
                     <Pressable
                         style={[StyleSheet.absoluteFill, styles.backdrop]}
@@ -63,17 +58,11 @@ export default function MonthSelect({value, onChange, options}: MonthSelectProps
                         accessibilityLabel="Fechar seleção de mês"
                     />
                     <View
-                        style={[
-                            styles.menu,
-                            {backgroundColor: colors.surface, borderColor: colors.border},
-                        ]}
+                        style={[styles.menu, {backgroundColor: colors.surface, borderColor: colors.border}]}
                         accessibilityViewIsModal
                     >
                         <View style={styles.menuHeader}>
-                            <Text
-                                accessibilityRole="header"
-                                style={[styles.menuTitle, {color: colors.text}]}
-                            >
+                            <Text accessibilityRole="header" style={[styles.menuTitle, {color: colors.text}]}>
                                 Selecionar mês
                             </Text>
                             <Pressable
@@ -81,9 +70,7 @@ export default function MonthSelect({value, onChange, options}: MonthSelectProps
                                 accessibilityRole="button"
                                 style={styles.close}
                             >
-                                <Text style={[styles.optionText, {color: colors.primary}]}>
-                                    Fechar
-                                </Text>
+                                <Text style={[styles.optionText, {color: colors.primary}]}>Fechar</Text>
                             </Pressable>
                         </View>
                         <ScrollView style={styles.options}>
@@ -101,10 +88,7 @@ export default function MonthSelect({value, onChange, options}: MonthSelectProps
                                     style={({pressed}) => [
                                         styles.option,
                                         {
-                                            backgroundColor:
-                                                month.value === value
-                                                    ? colors.elevated
-                                                    : "transparent",
+                                            backgroundColor: month.value === value ? colors.elevated : "transparent",
                                             opacity: pressed ? 0.7 : 1,
                                         },
                                     ]}
@@ -113,10 +97,7 @@ export default function MonthSelect({value, onChange, options}: MonthSelectProps
                                         style={[
                                             styles.optionText,
                                             {
-                                                color:
-                                                    month.value === value
-                                                        ? colors.primary
-                                                        : colors.text,
+                                                color: month.value === value ? colors.primary : colors.text,
                                             },
                                         ]}
                                     >

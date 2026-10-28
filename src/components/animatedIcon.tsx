@@ -8,7 +8,7 @@ import Animated, {
     useReducedMotion,
     useSharedValue,
     withRepeat,
-    withTiming
+    withTiming,
 } from "react-native-reanimated";
 
 import Icon, {type IconProps} from "./icon";
@@ -35,22 +35,33 @@ export default function AnimatedIcon({
         progress.set(0);
 
         if (active && !reducedMotion) {
-            progress.set(withRepeat(withTiming(1, {
-                duration: Math.max(100, duration),
-                easing: animation === "spin" ? Easing.linear : Easing.inOut(Easing.quad),
-                reduceMotion: ReduceMotion.System
-            }), -1, animation === "pulse", undefined, ReduceMotion.System));
+            progress.set(
+                withRepeat(
+                    withTiming(1, {
+                        duration: Math.max(100, duration),
+                        easing: animation === "spin" ? Easing.linear : Easing.inOut(Easing.quad),
+                        reduceMotion: ReduceMotion.System,
+                    }),
+                    -1,
+                    animation === "pulse",
+                    undefined,
+                    ReduceMotion.System,
+                ),
+            );
         }
 
         return () => cancelAnimation(progress);
-
     }, [active, animation, duration, progress, reducedMotion]);
 
-    const animatedStyle = useAnimatedStyle(
-        () => animation === "spin"
+    const animatedStyle = useAnimatedStyle(() =>
+        animation === "spin"
             ? {transform: [{rotate: `${progress.get() * 360}deg`}]}
-            : {opacity: 1 - progress.get() * 0.36, transform: [{scale: 1 + progress.get() * 0.08}]});
+            : {opacity: 1 - progress.get() * 0.36, transform: [{scale: 1 + progress.get() * 0.08}]},
+    );
 
-    return <Animated.View
-        style={[{alignSelf: "center"}, containerStyle, animatedStyle]}><Icon {...iconProps} /></Animated.View>;
+    return (
+        <Animated.View style={[{alignSelf: "center"}, containerStyle, animatedStyle]}>
+            <Icon {...iconProps} />
+        </Animated.View>
+    );
 }

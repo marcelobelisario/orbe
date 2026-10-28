@@ -1,489 +1,188 @@
-import { useTheme } from "@/theme/themeProvider";
-import type { ThemeColors } from "@/theme/tokens";
-import { fonts, radii } from "@/theme/tokens";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import {useLocalSearchParams, router} from "expo-router";
+import {useState} from "react";
+import {StyleSheet, Text, TextInput, View} from "react-native";
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+    Btn,
+    FormInput,
+    SelectCategories,
+    incomeCategories,
+    expenseCategories,
+    paymentMethods,
+} from "@/components";
+import FormScreen from "./formScreen";
+import ScreenHeader from "./screenHeader";
+import {useTransactions} from "@/contexts/transactions";
+import {useTheme} from "@/theme/themeProvider";
+import {fonts, radii} from "@/theme/tokens";
+import {
+    dateToISO,
+    formatAmount,
+    formatDateInput,
+    parseAmount,
+    validateEntry,
+} from "@/modules/newEntry/validation";
 
-type EntryType = "income" | "expense";
+export default function EntryForm({type}: { type: "income" | "expense" }) {
+    const {colors} = useTheme();
+    const {addTransaction} = useTransactions();
+    const params = useLocalSearchParams<{ category?: string }>();
+    const isIncome = type === "income";
+    const options = isIncome ? incomeCategories : expenseCategories;
+    const initialCategory =
+        options.find((item) => item.value === params.category || item.label === params.category)
+            ?.value ?? "";
+    const [amount, setAmount] = useState("");
+    const [description, setDescription] = useState("");
+    const [category, setCategory] = useState(initialCategory);
+    const [date, setDate] = useState(() => new Date().toLocaleDateString("pt-BR"));
+    const [paymentMethod, setPaymentMethod] = useState("");
+    const [notes, setNotes] = useState("");
+    const [saving, setSaving] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+    const errors = validateEntry({amount, description, category, date, paymentMethod}, isIncome);
+    const accent = isIncome ? colors.income : colors.expense;
+    const surface = isIncome ? colors.incomeSurface : colors.expenseSurface;
 
-type EntryFormProps = {
-  type: EntryType;
-};
-
-const incomeCategories = [
-  { label: "Salário", icon: "💼" },
-  { label: "Freelance", icon: "💻" },
-  { label: "Investimento", icon: "📈" },
-  { label: "Benefício", icon: "🎁" },
-  { label: "Outros", icon: "💰" },
-];
-
-const expenseCategories = [
-  { label: "Alimentação", icon: "🛒" },
-  { label: "Transporte", icon: "🚗" },
-  { label: "Moradia", icon: "🏠" },
-  { label: "Saúde", icon: "💊" },
-  { label: "Lazer", icon: "🎬" },
-  { label: "Educação", icon: "📚" },
-  { label: "Roupas", icon: "👕" },
-  { label: "Outros", icon: "📦" },
-];
-
-const paymentMethods = [
-  { label: "Pix", icon: "⚡" },
-  { label: "Débito", icon: "💳" },
-  { label: "Crédito", icon: "💳" },
-  { label: "Dinheiro", icon: "💵" },
-];
-
-function formatCurrency(value: string) {
-  const digits = value.replace(/\D/g, "");
-  if (!digits) return "0,00";
-  const cents = Number(digits);
-  return (cents / 100).toLocaleString("pt-BR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-}
-
-export default function EntryForm({ type }: EntryFormProps) {
-  const router = useRouter();
-  const params = useLocalSearchParams<{ category?: string }>();
-  const { colors } = useTheme();
-
-  const isIncome = type === "income";
-  const accent = isIncome ? colors.income : colors.expense;
-  const accentSurface = isIncome ? colors.incomeSurface : colors.expenseSurface;
-  const categories = isIncome ? incomeCategories : expenseCategories;
-  const initialCategory = categories.some((item) => item.label === params.category)
-    ? params.category ?? ""
-    : "";
-
-  const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
-  const [date, setDate] = useState(new Date().toLocaleDateString("pt-BR"));
-  const [paymentMethod, setPaymentMethod] = useState("");
-  const [notes, setNotes] = useState("");
-
-  const amountValue = Number(amount.replace(/\D/g, "")) / 100;
-
-  const formattedAmount = amount ? formatCurrency(amount) : "0,00";
-  const amountInputWidth = Math.max(80, formattedAmount.length * 19);
-
-  const canSave =
-    amountValue > 0 &&
-    description.trim().length > 0 &&
-    selectedCategory.length > 0 &&
-    date.trim().length > 0 &&
-    (isIncome || paymentMethod.length > 0);
-
-  function handleSave() {
-    if (!canSave) {
-      Alert.alert(
-        "Campos obrigatórios",
-        "Preencha o valor, a descrição, a categoria, a data e os demais campos obrigatórios.",
-      );
-      return;
+    function handleSave() {
+        setSubmitted(true);
+        if (saving || Object.keys(errors).length) return;
+        const selected = options.find((item) => item.value === category);
+        const isoDate = dateToISO(date);
+        if (!selected || !isoDate) return;
+        setSaving(true);
+        addTransaction({
+            type,
+            description: description.trim(),
+            category: selected.label,
+            emoji: selected.emoji,
+            date: isoDate,
+            amount: parseAmount(amount),
+            notes: notes.trim() || undefined,
+            paymentMethod: isIncome
+                ? undefined
+                : paymentMethods.find((item) => item.value === paymentMethod)?.label,
+        });
+        router.dismissTo("/dashboard");
     }
-    router.replace("/");
-  }
 
-  return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.background }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-    >
-      <ScrollView
-        style={{ backgroundColor: colors.background }}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* ── Cabeçalho ── */}
-        <View style={styles.header}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Voltar"
-            onPress={() => router.back()}
-            style={[styles.backButton, { backgroundColor: colors.surface }]}
-          >
-            <Text style={[styles.backIcon, { color: colors.text }]}>‹</Text>
-          </Pressable>
-
-          <View style={styles.headerText}>
-            <Text style={[styles.eyebrow, { color: accent, fontFamily: fonts.medium }]}>
-              {isIncome ? "Renda" : "Gasto"}
-            </Text>
-            <Text style={[styles.headerTitle, { color: colors.text, fontFamily: fonts.heading }]}>
-              Novo lançamento
-            </Text>
-          </View>
-        </View>
-
-        {/* ── Painel de valor ── */}
-        <View
-          style={[
-            styles.amountPanel,
-            {
-              backgroundColor: accentSurface,
-              borderColor: accent + "40",
-            },
-          ]}
-        >
-          <Text style={[styles.amountLabel, { color: accent, fontFamily: fonts.semibold }]}>
-            {isIncome ? "VALOR DA RENDA" : "VALOR DO GASTO"}
-          </Text>
-
-          <View style={styles.amountRow}>
-            <View style={styles.amountValueGroup}>
-              <Text
-                style={[
-                  styles.currencySymbol,
-                  { color: accent, fontFamily: fonts.heading },
-                ]}
-              >
-                R$
-              </Text>
-
-              <TextInput
-                accessibilityLabel="Valor do lançamento em reais"
-                value={formattedAmount}
-                onChangeText={(value) => setAmount(value.replace(/\D/g, ""))}
-                keyboardType="numeric"
-                style={[
-                  styles.amountInput,
-                  {
-                    color: colors.text,
-                    fontFamily: fonts.heading,
-                    width: amountInputWidth,
-                  },
-                ]}
-                selectTextOnFocus
-                underlineColorAndroid="transparent"
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* ── Descrição ── */}
-        <FormLabel colors={colors}>DESCRIÇÃO</FormLabel>
-        <TextInput
-          value={description}
-          onChangeText={setDescription}
-          placeholder={isIncome ? "Ex.: Salário, freelance..." : "Ex.: Supermercado, Uber..."}
-          placeholderTextColor={colors.placeholder}
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.inputBackground,
-              borderColor: colors.border,
-              color: colors.text,
-              fontFamily: fonts.regular,
-            },
-          ]}
-          accessibilityLabel="Descrição do Lançamento"
-          maxLength={100}
-        />
-
-        {/* ── Categoria ── */}
-        <FormLabel colors={colors}>CATEGORIA</FormLabel>
-        <View style={styles.optionsGrid}>
-          {categories.map((category) => {
-            const selected = selectedCategory === category.label;
-            return (
-              <Pressable
-                key={category.label}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                accessibilityLabel={`Categoria ${category.label}`}
-                onPress={() => setSelectedCategory(category.label)}
-                style={[
-                  styles.categoryOption,
-                  {
-                    backgroundColor: selected ? accentSurface : colors.surface,
-                    borderColor: selected ? accent : colors.border,
-                  },
-                ]}
-              >
-                <Text style={styles.optionIcon}>{category.icon}</Text>
-                <Text
-                  numberOfLines={1}
-                  style={[
-                    styles.optionLabel,
-                    { color: selected ? accent : colors.muted, fontFamily: fonts.regular },
-                  ]}
-                >
-                  {category.label}
+    return (
+        <FormScreen contentStyle={styles.content}>
+            <ScreenHeader subtitle={isIncome ? "Renda" : "Gasto"} title="Novo lançamento"/>
+            <View style={[styles.amountPanel, {backgroundColor: surface, borderColor: accent + "30"}]}>
+                <Text style={[styles.amountLabel, {color: accent}]}>
+                    {isIncome ? "VALOR DA RENDA" : "VALOR DO GASTO"}
                 </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {/* ── Data ── */}
-        <FormLabel colors={colors}>DATA</FormLabel>
-        <TextInput
-          value={date}
-          onChangeText={setDate}
-          placeholder="DD/MM/AAAA"
-          placeholderTextColor={colors.placeholder}
-          keyboardType="numbers-and-punctuation"
-          style={[
-            styles.input,
-            {
-              backgroundColor: colors.inputBackground,
-              borderColor: colors.border,
-              color: colors.text,
-              fontFamily: fonts.regular,
-            },
-          ]}
-          accessibilityLabel="Data do lançamento"
-          maxLength={10}
-        />
-
-        {/* ── Forma de pagamento (apenas gastos) ── */}
-        {!isIncome && (
-          <>
-            <FormLabel colors={colors}>FORMA DE PAGAMENTO</FormLabel>
-            <View style={styles.optionsGrid}>
-              {paymentMethods.map((method) => {
-                const selected = paymentMethod === method.label;
-                return (
-                  <Pressable
-                    key={method.label}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    onPress={() => setPaymentMethod(method.label)}
-                    style={[
-                      styles.categoryOption,
-                      {
-                        backgroundColor: selected ? accentSurface : colors.surface,
-                        borderColor: selected ? accent : colors.border,
-                      },
-                    ]}
-                  >
-                    <Text style={styles.optionIcon}>{method.icon}</Text>
-                    <Text
-                      style={[
-                        styles.optionLabel,
-                        { color: selected ? accent : colors.muted, fontFamily: fonts.regular },
-                      ]}
-                    >
-                      {method.label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+                <View style={styles.amountRow}>
+                    <Text style={[styles.currency, {color: accent}]}>R$</Text>
+                    <TextInput
+                        accessibilityLabel="Valor do lançamento em reais"
+                        value={formatAmount(amount)}
+                        onChangeText={(value) => setAmount(value.replace(/\D/g, "").slice(0, 11))}
+                        keyboardType="number-pad"
+                        selectTextOnFocus
+                        maxLength={16}
+                        underlineColorAndroid="transparent"
+                        style={[
+                            styles.amountInput,
+                            {
+                                color: parseAmount(amount) ? colors.text : colors.placeholder,
+                                width: Math.min(260, Math.max(104, formatAmount(amount).length * 27)),
+                            },
+                        ]}
+                    />
+                </View>
             </View>
-          </>
-        )}
-
-        {/* ── Observação ── */}
-        <FormLabel colors={colors}>OBSERVAÇÃO (opcional)</FormLabel>
-        <TextInput
-          value={notes}
-          onChangeText={setNotes}
-          placeholder="Alguma anotação sobre este lançamento..."
-          placeholderTextColor={colors.placeholder}
-          multiline
-          textAlignVertical="top"
-          style={[
-            styles.notesInput,
-            {
-              backgroundColor: colors.inputBackground,
-              borderColor: colors.border,
-              color: colors.text,
-              fontFamily: fonts.regular,
-            },
-          ]}
-          accessibilityLabel="Observação opcional"
-          maxLength={500}
-        />
-
-        {/* ── Botão Salvar ── */}
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Salvar lançamento"
-          onPress={handleSave}
-          style={({ pressed }) => [
-            styles.saveButton,
-            {
-              backgroundColor: canSave ? accent : colors.disabled,
-              opacity: pressed ? 0.8 : 1,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.saveButtonText,
-              {
-                color: canSave ? "#FFFFFF" : colors.disabledText,
-                fontFamily: fonts.semibold,
-              },
-            ]}
-          >
-            Salvar lançamento
-          </Text>
-        </Pressable>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  );
+            {submitted && errors.amount ? (
+                <Text style={[styles.error, {color: colors.expense}]}>{errors.amount}</Text>
+            ) : null}
+            <FormInput
+                label="Descrição"
+                value={description}
+                onChangeText={setDescription}
+                placeholder={isIncome ? "Ex: Salário maio, Freelance…" : "Ex: Supermercado, Uber, Netflix…"}
+                maxLength={100}
+                error={submitted ? errors.description : undefined}
+            />
+            <SelectCategories
+                label="Categoria"
+                options={options}
+                value={category}
+                onChange={setCategory}
+                tone={type}
+                error={submitted ? errors.category : undefined}
+            />
+            <FormInput
+                label="Data"
+                value={date}
+                onChangeText={(value) => setDate(formatDateInput(value))}
+                placeholder="DD/MM/AAAA"
+                keyboardType="number-pad"
+                maxLength={10}
+                error={submitted ? errors.date : undefined}
+            />
+            {!isIncome && (
+                <SelectCategories
+                    label="Forma de pagamento"
+                    options={paymentMethods}
+                    value={paymentMethod}
+                    onChange={setPaymentMethod}
+                    tone="expense"
+                    error={submitted ? errors.paymentMethod : undefined}
+                />
+            )}
+            <FormInput
+                label="Observação (opcional)"
+                value={notes}
+                onChangeText={setNotes}
+                placeholder="Alguma anotação sobre este lançamento…"
+                multiline
+                maxLength={500}
+            />
+            <Btn
+                label="Salvar lançamento"
+                size="large"
+                variant={type}
+                onPress={handleSave}
+                disabled={saving}
+                loading={saving}
+                style={[styles.save, Object.keys(errors).length > 0 && {backgroundColor: colors.elevated}]}
+                textStyle={Object.keys(errors).length > 0 ? {color: colors.disabledText} : undefined}
+            />
+        </FormScreen>
+    );
 }
-
-function FormLabel({ children, colors }: { children: string; colors: ThemeColors }) {
-  return (
-    <Text style={[styles.label, { color: colors.muted, fontFamily: fonts.semibold }]}>
-      {children}
-    </Text>
-  );
-}
-
 const styles = StyleSheet.create({
-  content: {
-    width: "100%",
-    maxWidth: 480,
-    alignSelf: "center",
-    paddingHorizontal: 24,
-    paddingTop: 28,
-    paddingBottom: 36,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 22,
-  },
-  backButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 9,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 10,
-  },
-  backIcon: {
-    fontSize: 27,
-    lineHeight: 29,
-    marginTop: -3,
-  },
-  headerText: {
-    flex: 1,
-  },
-  eyebrow: {
-    fontSize: 10,
-    marginBottom: 2,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  amountPanel: {
-    height: 104,
-    borderWidth: 1,
-    borderRadius: radii.card,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 18,
-  },
-  amountLabel: {
-    fontSize: 10,
-    letterSpacing: 0.6,
-    marginBottom: 5,
-  },
-  amountRow: {
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  currencySymbol: {
-    fontSize: 31,
-    fontWeight: "800",
-    marginRight: 0,
-  },
-
-  amountInput: {
-    width: 80,
-    padding: 0,
-    fontSize: 31,
-    lineHeight: 38,
-    fontWeight: "800",
-    textAlign: "left",
-    borderWidth: 0,
-    includeFontPadding: false,
-  },
-  amountValueGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "center",
-  },
-  label: {
-    fontSize: 10,
-    letterSpacing: 0.5,
-    marginBottom: 8,
-    marginTop: 2,
-  },
-  input: {
-    height: 42,
-    borderWidth: 1,
-    borderRadius: radii.control,
-    paddingHorizontal: 12,
-    fontSize: 12,
-    marginBottom: 16,
-  },
-  optionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 6,
-    marginBottom: 16,
-  },
-  categoryOption: {
-    width: "23.5%",
-    minWidth: 64,
-    height: 54,
-    borderWidth: 1,
-    borderRadius: radii.control,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 3,
-  },
-  optionIcon: {
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  optionLabel: {
-    fontSize: 8,
-    textAlign: "center",
-  },
-  notesInput: {
-    minHeight: 66,
-    borderWidth: 1,
-    borderRadius: radii.control,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 12,
-    marginBottom: 22,
-  },
-  saveButton: {
-    minHeight: 48,
-    borderRadius: radii.control,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 16,
-  },
-  saveButtonText: {
-    fontSize: 13,
-    fontWeight: "700",
-  },
+    content: {gap: 16, paddingBottom: 40},
+    amountPanel: {
+        borderRadius: radii.card,
+        borderWidth: 1,
+        padding: 24,
+        minHeight: 123,
+        justifyContent: "center",
+        gap: 8,
+        marginTop: 8,
+        marginBottom: 8,
+    },
+    amountLabel: {
+        fontFamily: fonts.medium,
+        fontSize: 12,
+        lineHeight: 16,
+        letterSpacing: 0.6,
+        textAlign: "center",
+    },
+    amountRow: {flexDirection: "row", justifyContent: "center", alignItems: "baseline", gap: 4},
+    currency: {fontFamily: fonts.heading, fontSize: 24, lineHeight: 32},
+    amountInput: {
+        fontFamily: fonts.heading,
+        fontSize: 48,
+        lineHeight: 56,
+        padding: 0,
+        minWidth: 100,
+        maxWidth: "80%",
+        flexShrink: 1,
+        textAlign: "left",
+        letterSpacing: -1.2,
+    },
+    save: {marginTop: 16},
+    error: {fontFamily: fonts.regular, fontSize: 12, lineHeight: 18},
 });

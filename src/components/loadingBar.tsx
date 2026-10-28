@@ -28,7 +28,8 @@ export default function LoadingBar({
             <View style={[styles.track, {height, backgroundColor: colors.border}, trackStyle]}>
                 <LinearGradient
                     colors={[colors[tone], tone === "income" ? colors.primary : colors[tone]]}
-                    start={{x: 0, y: 0}} end={{x: 1, y: 0}}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 0}}
                     style={[styles.fill, {width: `${percentage}%`}]}
                 />
             </View>

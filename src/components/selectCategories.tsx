@@ -1,4 +1,12 @@
-import {Pressable, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type ViewStyle} from "react-native";
+import {
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+    useWindowDimensions,
+    type StyleProp,
+    type ViewStyle,
+} from "react-native";
 
 import {useTheme} from "@/theme/themeProvider";
 import {fonts, radii} from "@/theme/tokens";
@@ -50,15 +58,22 @@ export default function SelectCategories({
                                              disabled = false,
                                              error,
                                              style,
-                                             testID
+                                             testID,
                                          }: SelectCategoriesProps) {
     const {colors} = useTheme();
-    const {fontScale} = useWindowDimensions();
+    const {fontScale, width} = useWindowDimensions();
     const accent = colors[tone];
-    const selectedSurface = tone === "income" ? colors.incomeSurface : tone === "expense" ? colors.expenseSurface : colors.elevated;
+    const selectedSurface =
+        tone === "income"
+            ? colors.incomeSurface
+            : tone === "expense"
+                ? colors.expenseSurface
+                : colors.elevated;
     // Fewer columns at large accessibility text sizes keep every label readable.
-    const columns = fontScale > 1.3 ? 2 : 4;
-    const rows = Array.from({length: Math.ceil(options.length / columns)}, (_, row) => options.slice(row * columns, (row + 1) * columns));
+    const columns = fontScale > 1.3 || width < 360 ? 2 : 4;
+    const rows = Array.from({length: Math.ceil(options.length / columns)}, (_, row) =>
+        options.slice(row * columns, (row + 1) * columns),
+    );
 
     return (
         <View style={[styles.container, style]} testID={testID}>
@@ -79,32 +94,46 @@ export default function SelectCategories({
                                     aria-disabled={Boolean(blocked)}
                                     disabled={blocked}
                                     onPress={() => onChange(option.value)}
-                                    style={({pressed}) => [styles.option, {
-                                        backgroundColor: selected ? selectedSurface : colors.surface,
-                                        borderColor: selected ? accent : colors.border,
-                                        opacity: blocked ? 0.45 : pressed ? 0.7 : 1
-                                    }]}
+                                    style={({pressed}) => [
+                                        styles.option,
+                                        {
+                                            backgroundColor: selected ? selectedSurface : colors.surface,
+                                            borderColor: selected ? accent : colors.border,
+                                            opacity: blocked ? 0.45 : pressed ? 0.7 : 1,
+                                        },
+                                    ]}
                                 >
                                     <Icon emoji={option.emoji}/>
-                                    <Text
-                                        style={[styles.optionLabel, {color: selected ? accent : colors.muted}]}>{option.label}</Text>
+                                    <Text style={[styles.optionLabel, {color: selected ? accent : colors.muted}]}>
+                                        {option.label}
+                                    </Text>
                                 </Pressable>
                             );
                         })}
-                        {Array.from({length: columns - row.length}, (_, index) => <View key={`empty-${index}`}
-                                                                                        style={styles.spacer}/>)}
+                        {Array.from({length: columns - row.length}, (_, index) => (
+                            <View key={`empty-${index}`} style={styles.spacer}/>
+                        ))}
                     </View>
                 ))}
             </View>
-            {error ? <Text accessibilityLiveRegion="polite"
-                           style={[styles.error, {color: colors.expense}]}>{error}</Text> : null}
+            {error ? (
+                <Text accessibilityLiveRegion="polite" style={[styles.error, {color: colors.expense}]}>
+                    {error}
+                </Text>
+            ) : null}
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {gap: 8},
-    label: {fontFamily: fonts.medium, fontSize: 12, lineHeight: 16, letterSpacing: 0.6, textTransform: "uppercase"},
+    label: {
+        fontFamily: fonts.medium,
+        fontSize: 12,
+        lineHeight: 16,
+        letterSpacing: 0.6,
+        textTransform: "uppercase",
+    },
     row: {flexDirection: "row", gap: 8, alignItems: "stretch"},
     option: {
         flex: 1,
@@ -116,7 +145,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 2,
         alignItems: "center",
         justifyContent: "center",
-        gap: 4
+        gap: 4,
     },
     optionLabel: {fontFamily: fonts.medium, fontSize: 10, lineHeight: 12.5, textAlign: "center"},
     spacer: {flex: 1},

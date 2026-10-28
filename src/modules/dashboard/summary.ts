@@ -31,16 +31,11 @@ export function shiftMonth(key: string, offset: number) {
 }
 
 export function getMonthOptions(entries: Transaction[], currentMonth: string) {
-    const years = [
-        Number(currentMonth.slice(0, 4)),
-        ...entries.map((item) => Number(item.date.slice(0, 4))),
-    ];
-    const firstYear = Math.min(...years);
-    const lastYear = Math.max(...years);
-    return Array.from({length: (lastYear - firstYear + 1) * 12}, (_, index) => {
-        const key = `${firstYear + Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, "0")}`;
-        return {value: key, label: formatMonth(key)};
-    }).reverse();
+    const months = new Set([currentMonth, ...entries.map((item) => item.date.slice(0, 7))]);
+    return [...months]
+        .sort()
+        .reverse()
+        .map((value) => ({value, label: formatMonth(value)}));
 }
 
 export function getMonthlyTotals(entries: Transaction[], month: string) {
@@ -79,9 +74,7 @@ export function getDashboardSummary(entries: Transaction[], month: string) {
         history,
         previousMonth,
         incomeChange:
-            previous.income > 0
-                ? ((current.income - previous.income) / previous.income) * 100
-                : null,
+            previous.income > 0 ? ((current.income - previous.income) / previous.income) * 100 : null,
         expenseChange:
             previous.expenses > 0
                 ? ((current.expenses - previous.expenses) / previous.expenses) * 100

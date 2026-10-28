@@ -10,14 +10,14 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "output": "server"
+      "output": "single"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF"
+          "backgroundColor": "#0c0e14"
         }
       ],
       "expo-image",

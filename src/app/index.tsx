@@ -1,1 +1,1 @@
-export { default } from "@/modules/identity";
+export {default} from "@/modules/identity";

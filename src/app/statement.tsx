@@ -1,1 +1,1 @@
-export { default } from "@/modules/statement";
+export {default} from "@/modules/statement";

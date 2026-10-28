@@ -63,10 +63,24 @@ test("mês vazio e gasto sem renda não produzem NaN nem percentuais enganosos",
     assert.equal(getMonthlyTotals(entries, "2027-02").commitment, null);
 });
 
-test("o seletor inclui o ano atual e os anos dos lançamentos", () => {
+test("o seletor inclui somente meses com dados e o mês atual, sem duplicações", () => {
     const options = getMonthOptions(entries, "2028-10");
     assert.ok(options.some((item) => item.value === "2028-10" && item.label === "Outubro 2028"));
     assert.ok(options.some((item) => item.value === "2026-01"));
     assert.equal(new Set(options.map((item) => item.value)).size, options.length);
-    assert.equal(getMonthOptions([], "2028-10").length, 12);
+    assert.deepEqual(
+        options.map((item) => item.value),
+        ["2028-10", "2027-02", "2027-01", "2026-12", "2026-01"],
+    );
+    assert.deepEqual(getMonthOptions([], "2028-10"), [{value: "2028-10", label: "Outubro 2028"}]);
+});
+
+test("meses futuros só aparecem quando possuem lançamentos", () => {
+    const options = getMonthOptions(entries, "2027-01");
+    assert.equal(options[0].value, "2027-02");
+    assert.equal(
+        options.some((item) => item.value === "2027-03"),
+        false,
+    );
+    assert.equal(options.filter((item) => item.value === "2027-01").length, 1);
 });

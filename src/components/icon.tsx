@@ -10,6 +10,9 @@ const assets = {
     eye: {source: require("@/assets/icons/eye.svg"), size: 20},
     eyeOff: {source: require("@/assets/icons/eye-off.svg"), size: 20},
     chevronDown: {source: require("@/assets/icons/chevron-down.svg"), size: 16},
+    entryBack: {source: require("@/assets/icons/entry-back.svg"), size: 16},
+    entryArrow: {source: require("@/assets/icons/entry-arrow.svg"), size: 20},
+    check: {source: require("@/assets/icons/check.svg"), size: 11, height: 8},
 } as const;
 
 export type IconName = keyof typeof assets;
@@ -30,9 +33,16 @@ export default function Icon(props: IconProps) {
         return (
             <Image
                 source={asset.source}
-                style={{width: asset.size, height: asset.size}}
+                style={{width: asset.size, height: "height" in asset ? asset.height : asset.size}}
                 contentFit="contain"
-                tintColor={props.color ?? (props.name === "plus" ? colors.onPrimary : props.name === "back" ? colors.text : colors.muted)}
+                tintColor={
+                    props.color ??
+                    (props.name === "plus"
+                        ? colors.onPrimary
+                        : props.name === "back"
+                            ? colors.text
+                            : colors.muted)
+                }
                 testID={testID}
             />
         );
@@ -41,12 +51,15 @@ export default function Icon(props: IconProps) {
     return (
         <Text
             testID={testID}
-            style={[{
-                color: props.color ?? colors.text,
-                fontSize: size,
-                lineHeight: size + 10,
-                textAlign: "center"
-            }, props.style]}
+            style={[
+                {
+                    color: props.color ?? colors.text,
+                    fontSize: size,
+                    lineHeight: size + 10,
+                    textAlign: "center",
+                },
+                props.style,
+            ]}
         >
             {props.emoji}
         </Text>

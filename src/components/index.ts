@@ -9,8 +9,8 @@ export {
     expenseCategories,
     paymentMethods,
     type CategoryOption,
-    type SelectCategoriesProps
+    type SelectCategoriesProps,
 } from "./selectCategories";
 export {default as ThemeToggle} from "./themeToggle";
-export { default as TransactionItem } from "./transactionItem";
-export { default as ValueVisibilityButton } from "./valueVisibilityButton";
+export {default as TransactionItem} from "./transactionItem";
+export {default as ValueVisibilityButton} from "./valueVisibilityButton";

@@ -5,8 +5,13 @@ import {useTheme} from "@/theme/themeProvider";
 import {fonts, radii} from "@/theme/tokens";
 import Icon from "./icon";
 
-export default function TransactionItem({transaction, showYear = false}
-                                        : { transaction: Transaction; showYear?: boolean; }) {
+export default function TransactionItem({
+                                            transaction,
+                                            showYear = false,
+                                        }: {
+    transaction: Transaction;
+    showYear?: boolean;
+}) {
     const {colors} = useTheme();
     const {valuesVisible} = useValueVisibility();
     const date = transaction.date.split("-").reverse().join("/");
@@ -17,19 +22,20 @@ export default function TransactionItem({transaction, showYear = false}
                 <Icon emoji={transaction.emoji} size={16}/>
             </View>
             <View style={styles.details}>
-                <Text style={[styles.name, {color: colors.text}]}>
-                    {transaction.description}
-                </Text>
+                <Text style={[styles.name, {color: colors.text}]}>{transaction.description}</Text>
                 <Text style={[styles.caption, {color: colors.muted}]}>
                     {transaction.category} · {showYear ? date : date.slice(0, 5)}
+                    {showYear && transaction.paymentMethod ? ` · ${transaction.paymentMethod}` : ""}
                 </Text>
+                {showYear && transaction.notes ? (
+                    <Text style={[styles.caption, {color: colors.muted}]}>{transaction.notes}</Text>
+                ) : null}
             </View>
             <Text
                 style={[
                     styles.value,
                     {
-                        color:
-                            transaction.type === "income" ? colors.income : colors.expense,
+                        color: transaction.type === "income" ? colors.income : colors.expense,
                     },
                 ]}
             >
