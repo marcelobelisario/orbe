@@ -1,6 +1,7 @@
 import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
 import fastifySwagger from '@fastify/swagger'
+import fastifySwaggerUi from '@fastify/swagger-ui'
 import "dotenv/config"
 import Fastify from 'fastify'
 import { db } from './config/database'
@@ -34,13 +35,13 @@ app.register(fastifySwagger, {
     }
 })
 
+app.register(fastifySwaggerUi, {
+    routePrefix: '/docs',
+})
+
 app.get('/helth', async () => {
     const result = db.prepare('SELECT 1 as ok').get()
     return { status: 'API Orbe online', database: result }
-})
-
-app.get('/docs/json', async () => {
-    return app.swagger()
 })
 
 app.register(registerRoutes)
