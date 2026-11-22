@@ -50,5 +50,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/*.test.mjs"
   },
-  "private": true
+  "private": true,
+  "allowScripts": {
+    "unrs-resolver@1.12.2": true
+  }
 }
