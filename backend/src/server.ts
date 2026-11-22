@@ -1,5 +1,6 @@
 import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
+import fastifySwagger from '@fastify/swagger'
 import "dotenv/config"
 import Fastify from 'fastify'
 import { db } from './config/database'
@@ -15,9 +16,31 @@ app.register(jwt, {
     secret: process.env.JWT_ACESS_SECRET || 'fallback_secret',
 })
 
+app.register(fastifySwagger, {
+    openapi: {
+        info: {
+            title: 'API Orbe',
+            version: '1.0.0'
+        },
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    bearerFormat: 'JWT'
+                }
+            }
+        }
+    }
+})
+
 app.get('/helth', async () => {
     const result = db.prepare('SELECT 1 as ok').get()
     return { status: 'API Orbe online', database: result }
+})
+
+app.get('/docs/json', async () => {
+    return app.swagger()
 })
 
 app.register(registerRoutes)
