@@ -78,12 +78,12 @@ export function TransactionsProvider({ children }: PropsWithChildren) {
       if (result.items && result.items.length > 0) {
         setTransactions(result.items.map(mapLancamentoToTransaction));
       } else {
-        setTransactions(sampleTransactions);
+        setTransactions([]);
       }
     } catch (err: any) {
       console.error("Erro ao carregar lançamentos da API:", err);
-      setError("Não foi possível carregar os lançamentos. Usando dados locais.");
-      setTransactions(sampleTransactions);
+      setError("Não foi possível carregar os lançamentos.");
+      setTransactions([]);
     } finally {
       setIsLoading(false);
     }
