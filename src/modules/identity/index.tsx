@@ -15,11 +15,13 @@ import FormScreen from "@/components/formScreen";
 import {OrbeLogo} from "@/components/OrbeLogo";
 import {useTheme} from "@/theme/themeProvider";
 import {fonts, radii} from "@/theme/tokens";
+import {useAuth} from "@/contexts/auth";
 import {LoginForm} from "./LoginForm";
 import {isValidEmail} from "./validation";
 
 export default function IdentityScreen() {
     const {colors, theme, setTheme} = useTheme();
+    const {signInDemo} = useAuth();
     const {registered} = useLocalSearchParams<{ registered?: string }>();
     const [forgotModalVisible, setForgotModalVisible] = useState(false);
     const [recoveryEmail, setRecoveryEmail] = useState("");
@@ -27,6 +29,11 @@ export default function IdentityScreen() {
     const [recoveryNotice, setRecoveryNotice] = useState("");
 
     function openDashboard() {
+        router.replace("/dashboard");
+    }
+
+    function handleExploreDemo() {
+        signInDemo();
         router.replace("/dashboard");
     }
 
@@ -62,13 +69,13 @@ export default function IdentityScreen() {
                 </View>
                 {registered === "1" ? (
                     <Text accessibilityLiveRegion="polite" style={[styles.notice, {color: colors.income}]}>
-                        Cadastro validado na demonstração. Entre para continuar.
+                        Conta criada com sucesso! Faça login para continuar.
                     </Text>
                 ) : null}
                 <LoginForm
                     onSuccess={openDashboard}
                     onForgotPassword={openRecovery}
-                    onExploreDemo={openDashboard}
+                    onExploreDemo={handleExploreDemo}
                 />
                 <View style={styles.footer}>
                     <Text style={[styles.footerText, {color: colors.muted}]}>Ainda não tem uma conta?</Text>

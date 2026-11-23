@@ -4,22 +4,28 @@ import {Btn, FormInput, Icon} from "@/components";
 import {PasswordStrengthMeter} from "@/components/PasswordStrengthMeter";
 import {useTheme} from "@/theme/themeProvider";
 import {fonts} from "@/theme/tokens";
+import {useAuth} from "@/contexts/auth";
 import {MIN_PASSWORD_LENGTH, validateRegistration, type RegistrationErrors} from "./validation";
 
 export function RegisterForm({onSuccess}: { onSuccess: () => void }) {
     const {colors} = useTheme();
+    const {signUp} = useAuth();
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [errors, setErrors] = useState<RegistrationErrors>({});
+    const [registerError, setRegisterError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
     function clearError(field: keyof RegistrationErrors) {
         setErrors((current) => ({...current, [field]: undefined}));
+        setRegisterError("");
     }
 
-    function handleRegister() {
+    async function handleRegister() {
+        setRegisterError("");
         const nextErrors = validateRegistration({
             fullName,
             email,
@@ -28,7 +34,26 @@ export function RegisterForm({onSuccess}: { onSuccess: () => void }) {
             termsAccepted,
         });
         setErrors(nextErrors);
-        if (!Object.keys(nextErrors).length) onSuccess();
+        if (Object.keys(nextErrors).length > 0) return;
+
+        setIsLoading(true);
+        try {
+            await signUp({
+                nome_completo: fullName.trim(),
+                email: email.trim(),
+                senha: password,
+            });
+            onSuccess();
+        } catch (err: any) {
+            const message =
+                err?.response?.data?.message ||
+                (err?.response?.status === 409
+                    ? "Este e-mail já está cadastrado."
+                    : "Erro ao realizar cadastro. Verifique sua conexão.");
+            setRegisterError(message);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -133,7 +158,12 @@ export function RegisterForm({onSuccess}: { onSuccess: () => void }) {
                     {errors.termsAccepted}
                 </Text>
             ) : null}
-            <Btn label="Criar conta" onPress={handleRegister}/>
+            {registerError ? (
+                <Text accessibilityLiveRegion="polite" style={[styles.errorNotice, {color: colors.expense}]}>
+                    {registerError}
+                </Text>
+            ) : null}
+            <Btn label="Criar conta" onPress={handleRegister} loading={isLoading} />
         </View>
     );
 }
@@ -156,4 +186,5 @@ const styles = StyleSheet.create({
     },
     termsText: {flex: 1, maxWidth: 299, fontFamily: fonts.regular, fontSize: 12, lineHeight: 16},
     error: {fontFamily: fonts.regular, fontSize: 12, lineHeight: 18},
+    errorNotice: {fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, textAlign: "center"},
 });
