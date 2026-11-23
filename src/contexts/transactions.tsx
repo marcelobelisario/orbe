@@ -1,15 +1,16 @@
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useState,
   type PropsWithChildren,
 } from "react";
+import { CanceledError, isAxiosError } from "axios";
 import { transactions as sampleTransactions, type Transaction } from "@/data/finance";
 import { lancamentoService } from "@/services/lancamentoService";
 import { categoriaService } from "@/services/categoriaService";
-import type { Lancamento } from "@/types";
+import { getApiSessionSignal } from "@/services/api";
+import type { FormaPagamento, Lancamento } from "@/types";
 import { useAuth } from "./auth";
 
 type TransactionsContextValue = {
@@ -17,12 +18,17 @@ type TransactionsContextValue = {
   isLoading: boolean;
   error: string | null;
   addTransaction: (entry: Omit<Transaction, "id">) => Promise<void>;
-  clearTransactions: () => Promise<void>;
-  restoreExamples: () => Promise<void>;
-  refreshTransactions: () => Promise<void>;
+  clearTransactions: () => void;
+  restoreExamples: () => void;
+  refreshTransactions: () => void;
 };
 
-const DEFAULT_USER_ID = 1;
+const paymentLabels: Record<FormaPagamento, string> = {
+  pix: "Pix",
+  debito: "Débito",
+  credito: "Crédito",
+  dinheiro: "Dinheiro",
+};
 
 function mapLancamentoToTransaction(item: Lancamento): Transaction {
   const emojiMap: Record<string, string> = {
@@ -46,173 +52,138 @@ function mapLancamentoToTransaction(item: Lancamento): Transaction {
     type: item.tipo === "renda" ? "income" : "expense",
     date: item.data,
     amount: item.valor_centavos,
-    paymentMethod: item.forma_pagamento || undefined,
+    paymentMethod: item.forma_pagamento ? paymentLabels[item.forma_pagamento] : undefined,
     notes: item.observacao || undefined,
   };
 }
 
 const TransactionsContext = createContext<TransactionsContextValue | null>(null);
 
+function createSession(token: string | null, isDemo: boolean) {
+  return {
+    id: Symbol(),
+    token,
+    isDemo,
+    transactions: isDemo ? sampleTransactions : ([] as Transaction[]),
+    isLoading: Boolean(token),
+    error: null as string | null,
+    loadAttempt: 0,
+  };
+}
+
 export function TransactionsProvider({ children }: PropsWithChildren) {
-  const { user, isDemo } = useAuth();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { user, token: authToken, isDemo, signOut } = useAuth();
+  const token = user && !isDemo ? authToken : null;
+  const [session, setSession] = useState(() => createSession(token, isDemo));
+  if (session.token !== token || session.isDemo !== isDemo) {
+    setSession(createSession(token, isDemo));
+  }
+  const { id: sessionId, transactions, isLoading, error, loadAttempt } = session;
 
-  const fetchTransactions = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      if (isDemo) {
-        setTransactions(sampleTransactions);
-        return;
-      }
-
-      const activeUserId = user?.id || DEFAULT_USER_ID;
-      const result = await lancamentoService.list({
-        usuario_id: activeUserId,
-        limit: 100,
-      });
-
-      if (result.items && result.items.length > 0) {
-        setTransactions(result.items.map(mapLancamentoToTransaction));
-      } else {
-        setTransactions([]);
-      }
-    } catch (err: any) {
-      console.error("Erro ao carregar lançamentos da API:", err);
-      setError("Não foi possível carregar os lançamentos.");
-      setTransactions([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, isDemo]);
+  function setTransactions(update: (current: Transaction[]) => Transaction[]) {
+    setSession((current) => current.id === sessionId
+      ? { ...current, transactions: update(current.transactions) }
+      : current);
+  }
 
   useEffect(() => {
-    let active = true;
-    Promise.resolve().then(() => {
-      if (active) {
-        fetchTransactions();
+    if (!token) return;
+
+    const sessionSignal = getApiSessionSignal(token);
+    if (!sessionSignal) return;
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    const cancelLoad = () => controller.abort();
+    sessionSignal.addEventListener("abort", cancelLoad, { once: true });
+
+    function finishLoad(result: { transactions: Transaction[] } | { error: string }) {
+      if (signal.aborted) return;
+      setSession((current) => current.id === sessionId
+        ? { ...current, ...result, isLoading: false }
+        : current);
+    }
+
+    async function loadTransactions() {
+      try {
+        const entries: Transaction[] = [];
+        const limit = 100;
+        let offset = 0;
+        while (!signal.aborted) {
+          const page = await lancamentoService.list({ limit, offset }, { signal });
+          entries.push(...page.items.map(mapLancamentoToTransaction));
+          offset += page.items.length;
+          if (offset >= page.total || page.items.length === 0) break;
+        }
+        finishLoad({ transactions: entries });
+      } catch (err) {
+        if (signal.aborted) return;
+        if (isAxiosError(err) && err.response?.status === 401) {
+          signOut();
+          return;
+        }
+        finishLoad({ error: "Não foi possível carregar os lançamentos." });
       }
-    });
+    }
+
+    void loadTransactions();
     return () => {
-      active = false;
+      sessionSignal.removeEventListener("abort", cancelLoad);
+      cancelLoad();
     };
-  }, [fetchTransactions]);
+  }, [token, sessionId, loadAttempt, signOut]);
 
   async function addTransaction(entry: Omit<Transaction, "id">) {
     if (isDemo) {
-      const newTx: Transaction = {
-        ...entry,
-        id: Math.max(0, ...transactions.map((item) => item.id)) + 1,
-      };
-      setTransactions((current) => [newTx, ...current]);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const activeUserId = user?.id || DEFAULT_USER_ID;
-      const tipo = entry.type === "income" ? "renda" : "gasto";
-      let formaPagamento: "pix" | "debito" | "credito" | "dinheiro" | null = null;
-
-      if (tipo === "gasto") {
-        const method = (entry.paymentMethod || "").toLowerCase();
-        if (method.includes("pix")) formaPagamento = "pix";
-        else if (method.includes("cred")) formaPagamento = "credito";
-        else if (method.includes("deb")) formaPagamento = "debito";
-        else if (method.includes("din")) formaPagamento = "dinheiro";
-        else formaPagamento = "pix";
-      }
-
-      let categoriaId = 1;
-      try {
-        const categorias = await categoriaService.list({
-          usuario_id: activeUserId,
-          tipo,
-          nome: entry.category,
-        });
-
-        if (categorias.items.length > 0) {
-          categoriaId = categorias.items[0].id;
-        } else {
-          const novaCategoria = await categoriaService.create({
-            usuario_id: activeUserId,
-            tipo,
-            nome: entry.category || (tipo === "renda" ? "Renda" : "Outros"),
-          });
-          categoriaId = novaCategoria.id;
-        }
-      } catch {
-        categoriaId = 1;
-      }
-
-      const created = await lancamentoService.create({
-        usuario_id: activeUserId,
-        categoria_id: categoriaId,
-        tipo,
-        valor_centavos: entry.amount,
-        descricao: entry.description,
-        data: entry.date,
-        forma_pagamento: formaPagamento,
-        observacao: entry.notes || null,
-      });
-
-      const newTx: Transaction = {
-        ...entry,
-        id: created.id,
-      };
-
-      setTransactions((current) => [newTx, ...current]);
-    } catch (err: any) {
-      console.error("Erro ao adicionar lançamento:", err);
-      setError("Erro ao salvar lançamento na API. Adicionado localmente.");
       setTransactions((current) => [
-        {
-          ...entry,
-          id: Math.max(0, ...current.map((item) => item.id)) + 1,
-        },
+        { ...entry, id: Math.max(0, ...current.map((item) => item.id)) + 1 },
         ...current,
       ]);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function clearTransactions() {
-    if (isDemo) {
-      setTransactions([]);
       return;
     }
 
-    try {
-      setIsLoading(true);
-      setError(null);
-      const activeUserId = user?.id || DEFAULT_USER_ID;
-      for (const tx of transactions) {
-        await lancamentoService.delete(tx.id, activeUserId).catch(() => {});
+    const signal = token ? getApiSessionSignal(token) : undefined;
+    if (!signal) throw new Error("Entre na sua conta para salvar um lançamento.");
+    const config = { signal };
+    const tipo = entry.type === "income" ? "renda" : "gasto";
+    const paymentCodes = Object.keys(paymentLabels) as FormaPagamento[];
+    const formaPagamento = tipo === "gasto"
+      ? paymentCodes.find((code) => paymentLabels[code] === entry.paymentMethod)
+      : null;
+    const categoryQuery = { tipo, nome: entry.category, limit: 100 } as const;
+    const findCategory = async () => {
+      const result = await categoriaService.list(categoryQuery, config);
+      return result.items.find((category) => category.nome.toLowerCase() === entry.category.toLowerCase());
+    };
+
+    let category = await findCategory();
+    if (!category) {
+      try {
+        category = await categoriaService.create({ tipo, nome: entry.category }, config);
+      } catch (err) {
+        if (!isAxiosError(err) || err.response?.status !== 409) throw err;
+        category = await findCategory();
+        if (!category) throw err;
       }
-      setTransactions([]);
-    } catch (err) {
-      console.error("Erro ao limpar lançamentos:", err);
-      setError("Erro ao limpar lançamentos.");
-      setTransactions([]);
-    } finally {
-      setIsLoading(false);
     }
+
+    const created = await lancamentoService.create({
+      categoria_id: category.id,
+      tipo,
+      valor_centavos: entry.amount,
+      descricao: entry.description,
+      data: entry.date,
+      forma_pagamento: formaPagamento,
+      observacao: entry.notes || null,
+    }, config);
+
+    if (signal.aborted) throw new CanceledError();
+    setTransactions((current) => [mapLancamentoToTransaction(created), ...current.filter(({ id }) => id !== created.id)]);
   }
 
-  async function restoreExamples() {
-    try {
-      setIsLoading(true);
-      setError(null);
-      setTransactions(sampleTransactions);
-    } finally {
-      setIsLoading(false);
-    }
+  function refreshTransactions() {
+    if (!token) return;
+    setSession((current) => ({ ...current, isLoading: true, error: null, loadAttempt: current.loadAttempt + 1 }));
   }
 
   return (
@@ -222,9 +193,9 @@ export function TransactionsProvider({ children }: PropsWithChildren) {
         isLoading,
         error,
         addTransaction,
-        clearTransactions,
-        restoreExamples,
-        refreshTransactions: fetchTransactions,
+        clearTransactions: () => { if (isDemo) setTransactions(() => []); },
+        restoreExamples: () => { if (isDemo) setTransactions(() => sampleTransactions); },
+        refreshTransactions,
       }}
     >
       {children}

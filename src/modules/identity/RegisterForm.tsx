@@ -25,6 +25,7 @@ export function RegisterForm({onSuccess}: { onSuccess: () => void }) {
     }
 
     async function handleRegister() {
+        if (isLoading) return;
         setRegisterError("");
         const nextErrors = validateRegistration({
             fullName,

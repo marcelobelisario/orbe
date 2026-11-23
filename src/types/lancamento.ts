@@ -16,7 +16,6 @@ export interface Lancamento {
 }
 
 export interface CreateLancamentoDTO {
-  usuario_id: number;
   categoria_id: number;
   tipo: LancamentoTipo;
   valor_centavos: number;
@@ -37,7 +36,6 @@ export interface UpdateLancamentoDTO {
 }
 
 export interface ListLancamentoQuery {
-  usuario_id?: number;
   categoria_id?: number;
   tipo?: LancamentoTipo;
   data_inicio?: string;

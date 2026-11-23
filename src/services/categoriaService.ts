@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { AxiosRequestConfig } from 'axios';
 import {
   Categoria,
   CreateCategoriaDTO,
@@ -8,13 +9,14 @@ import {
 } from '../types';
 
 export const categoriaService = {
-  async create(data: CreateCategoriaDTO): Promise<Categoria> {
-    const response = await api.post<Categoria>('/categorias', data);
+  async create(data: CreateCategoriaDTO, config?: AxiosRequestConfig): Promise<Categoria> {
+    const response = await api.post<Categoria>('/categorias', data, config);
     return response.data;
   },
 
-  async list(query?: ListCategoriaQuery): Promise<PaginatedResult<Categoria>> {
+  async list(query?: ListCategoriaQuery, config?: AxiosRequestConfig): Promise<PaginatedResult<Categoria>> {
     const response = await api.get<PaginatedResult<Categoria>>('/categorias', {
+      ...config,
       params: query,
     });
     return response.data;

@@ -9,7 +9,6 @@ export interface Categoria {
 }
 
 export interface CreateCategoriaDTO {
-  usuario_id: number;
   tipo: CategoriaTipo;
   nome: string;
 }
@@ -20,7 +19,6 @@ export interface UpdateCategoriaDTO {
 }
 
 export interface ListCategoriaQuery {
-  usuario_id?: number;
   tipo?: CategoriaTipo;
   nome?: string;
   limit?: number;

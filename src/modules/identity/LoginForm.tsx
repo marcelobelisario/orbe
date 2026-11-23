@@ -7,12 +7,11 @@ import {useAuth} from "@/contexts/auth";
 import {validateLogin} from "./validation";
 
 type LoginFormProps = {
-    onSuccess: () => void;
     onForgotPassword: () => void;
     onExploreDemo: () => void;
 };
 
-export function LoginForm({onSuccess, onForgotPassword, onExploreDemo}: LoginFormProps) {
+export function LoginForm({onForgotPassword, onExploreDemo}: LoginFormProps) {
     const {colors} = useTheme();
     const {signIn} = useAuth();
     const [email, setEmail] = useState("");
@@ -22,6 +21,7 @@ export function LoginForm({onSuccess, onForgotPassword, onExploreDemo}: LoginFor
     const [isLoading, setIsLoading] = useState(false);
 
     async function handleLogin() {
+        if (isLoading) return;
         setLoginError("");
         const nextErrors = validateLogin(email, password);
         setErrors(nextErrors);
@@ -30,7 +30,6 @@ export function LoginForm({onSuccess, onForgotPassword, onExploreDemo}: LoginFor
         setIsLoading(true);
         try {
             await signIn({ email: email.trim(), senha: password });
-            onSuccess();
         } catch (err: any) {
             const message =
                 err?.response?.data?.message ||
