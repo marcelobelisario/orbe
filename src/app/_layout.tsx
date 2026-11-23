@@ -1,5 +1,6 @@
 import {ValueVisibilityProvider} from "@/contexts/valueVisibility";
 import {TransactionsProvider} from "@/contexts/transactions";
+import {AuthProvider} from "@/contexts/auth";
 import {Stack} from "expo-router";
 import {StatusBar} from "expo-status-bar";
 
@@ -47,11 +48,13 @@ function Navigation() {
 export default function RootLayout() {
     return (
         <ThemeProvider>
-            <ValueVisibilityProvider>
-                <TransactionsProvider>
-                    <Navigation/>
-                </TransactionsProvider>
-            </ValueVisibilityProvider>
+            <AuthProvider>
+                <ValueVisibilityProvider>
+                    <TransactionsProvider>
+                        <Navigation/>
+                    </TransactionsProvider>
+                </ValueVisibilityProvider>
+            </AuthProvider>
         </ThemeProvider>
     );
 }

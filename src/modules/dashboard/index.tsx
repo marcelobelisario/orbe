@@ -18,6 +18,9 @@ import {
 import {useValueVisibility} from "@/contexts/valueVisibility";
 import {categories, formatMoney} from "@/data/finance";
 import {useTransactions} from "@/contexts/transactions";
+import {useAuth} from "@/contexts/auth";
+import {usuarioService} from "@/services/usuarioService";
+import type {Usuario} from "@/types";
 import {useTheme} from "@/theme/themeProvider";
 import {fonts, radii} from "@/theme/tokens";
 import LoadingState from "@/states/loadingState";
@@ -47,6 +50,7 @@ export default function Dashboard() {
 
 function DashboardContent() {
     const {transactions} = useTransactions();
+    const {user: authUser, isDemo, signOut} = useAuth();
     const {colors} = useTheme();
     const {width, fontScale} = useWindowDimensions();
     const {valuesVisible} = useValueVisibility();
@@ -55,6 +59,29 @@ function DashboardContent() {
     const [chartWidth, setChartWidth] = useState(0);
     const [selectedMonth, setSelectedMonth] = useState(getMonthKey);
     const monthOptions = getMonthOptions(transactions, getMonthKey());
+
+    const [fetchedUser, setFetchedUser] = useState<Usuario | null>(null);
+
+    useEffect(() => {
+        let isMounted = true;
+        if (authUser && authUser.id > 0 && !isDemo) {
+            usuarioService.getById(authUser.id).then((data) => {
+                if (isMounted && data) {
+                    setFetchedUser(data);
+                }
+            }).catch((err) => {
+                console.error("Erro ao carregar usuário:", err);
+            });
+        }
+        return () => {
+            isMounted = false;
+        };
+    }, [authUser, isDemo]);
+
+    const user = fetchedUser || authUser;
+    const displayName = isDemo ? "Demonstração" : user?.nome_completo;
+    const firstName = displayName?.trim().split(/\s+/)[0] || "Usuário";
+    const avatarInitial = firstName.charAt(0).toUpperCase() || "U";
 
     // Todos os indicadores usam somente os lançamentos do mês selecionado.
     const summary = getDashboardSummary(transactions, selectedMonth);
@@ -85,7 +112,7 @@ function DashboardContent() {
                 <View style={styles.content}>
                     <View style={styles.header}>
                         <View style={styles.flex}>
-                            <Text style={[styles.body, {color: colors.muted}]}>Bom dia, Ana 👋</Text>
+                            <Text style={[styles.body, {color: colors.muted}]}>Bom dia, {firstName} 👋</Text>
                             <MonthSelect
                                 value={selectedMonth}
                                 onChange={setSelectedMonth}
@@ -109,7 +136,7 @@ function DashboardContent() {
                                 hitSlop={4}
                             >
                                 <LinearGradient colors={[colors.primary, "#6366f1"]} style={styles.avatar}>
-                                    <Text style={styles.avatarText}>A</Text>
+                                    <Text style={styles.avatarText}>{avatarInitial}</Text>
                                 </LinearGradient>
                             </Pressable>
                         </View>
@@ -125,7 +152,10 @@ function DashboardContent() {
                             <Btn
                                 label="Voltar ao login"
                                 variant="secondary"
-                                onPress={() => router.replace("/")}
+                                onPress={() => {
+                                    signOut();
+                                    router.replace("/");
+                                }}
                             />
                         </View>
                     )}

@@ -14,6 +14,11 @@ const updateUsuarioSchema = z.object({
   senha: z.string().min(6).optional(),
 })
 
+const loginSchema = z.object({
+  email: z.string().trim().email('E-mail inválido'),
+  senha: z.string().min(1, 'Senha obrigatória'),
+})
+
 const idParamSchema = z.object({
   id: z.coerce.number().int().positive('ID deve ser um inteiro positivo'),
 })
@@ -53,6 +58,16 @@ export class UsuarioController {
     const { id } = idParamSchema.parse(request.params)
     await usuarioService.delete(id)
     return reply.status(204).send()
+  }
+
+  async login(request: FastifyRequest, reply: FastifyReply) {
+    const data = loginSchema.parse(request.body)
+    const user = await usuarioService.authenticate(data.email, data.senha)
+    const token = (request.server as any).jwt.sign(
+      { sub: user.id, email: user.email },
+      { expiresIn: '7d' }
+    )
+    return reply.status(200).send({ user, token })
   }
 }
 

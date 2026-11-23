@@ -18,6 +18,13 @@ export class NotFoundError extends AppError {
   }
 }
 
+export class UnauthorizedError extends AppError {
+  constructor(message = 'Credenciais inválidas') {
+    super(message, 401)
+    Object.setPrototypeOf(this, UnauthorizedError.prototype)
+  }
+}
+
 export class ConflictError extends AppError {
   constructor(message = 'Conflito de dados') {
     super(message, 409)

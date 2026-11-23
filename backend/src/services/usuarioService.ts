@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt'
 import { db } from '../config/database'
-import { NotFoundError } from '../middlewares/errorHandler'
+import { NotFoundError, UnauthorizedError } from '../middlewares/errorHandler'
 
 export interface Usuario {
   id: number
@@ -108,6 +108,30 @@ export class UsuarioService {
     const stmt = db.prepare('DELETE FROM usuarios WHERE id = ?')
     stmt.run(id)
     return { success: true }
+  }
+
+  async findByEmail(email: string): Promise<Usuario | undefined> {
+    const stmt = db.prepare(`
+      SELECT id, nome_completo, email, senha_hash, criado_em
+      FROM usuarios
+      WHERE lower(trim(email)) = lower(trim(?))
+    `)
+    return stmt.get(email) as Usuario | undefined
+  }
+
+  async authenticate(email: string, senha: string) {
+    const user = await this.findByEmail(email)
+    if (!user) {
+      throw new UnauthorizedError('E-mail ou senha inválidos')
+    }
+
+    const passwordMatch = await bcrypt.compare(senha, user.senha_hash)
+    if (!passwordMatch) {
+      throw new UnauthorizedError('E-mail ou senha inválidos')
+    }
+
+    const { senha_hash, ...userWithoutPassword } = user
+    return userWithoutPassword
   }
 }
 
