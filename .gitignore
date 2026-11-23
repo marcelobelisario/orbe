@@ -46,3 +46,9 @@ example
 .env
 .env.*
 !.env.example
+
+# Banco SQLite local
+/backend/db/orbe.db
+/backend/db/orbe.db-journal
+/backend/db/orbe.db-wal
+/backend/db/orbe.db-shm

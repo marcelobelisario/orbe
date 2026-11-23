@@ -39,23 +39,13 @@ export class UsuarioService {
     return this.getById(Number(result.lastInsertRowid))
   }
 
-  async list({ limit, offset }: PaginationParams) {
-    const countStmt = db.prepare('SELECT COUNT(*) as total FROM usuarios')
-    const total = (countStmt.get() as { total: number }).total
-
-    const stmt = db.prepare(`
-      SELECT id, nome_completo, email, criado_em
-      FROM usuarios
-      ORDER BY id ASC
-      LIMIT ? OFFSET ?
-    `)
-    const items = stmt.all(limit, offset)
-
+  async list(id: number, { limit, offset }: PaginationParams) {
+    const user = await this.getById(id)
     return {
-      total,
+      total: 1,
       limit,
       offset,
-      items,
+      items: offset === 0 ? [user] : [],
     }
   }
 

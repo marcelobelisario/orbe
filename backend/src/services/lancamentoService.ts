@@ -39,7 +39,7 @@ export interface UpdateLancamentoDTO {
 }
 
 export interface ListLancamentoFilter {
-  usuario_id?: number
+  usuario_id: number
   categoria_id?: number
   tipo?: LancamentoTipo
   data_inicio?: string
@@ -93,17 +93,12 @@ export class LancamentoService {
       observacao: data.observacao ? data.observacao.trim() : null,
     })
 
-    return this.getById(Number(result.lastInsertRowid))
+    return this.getById(Number(result.lastInsertRowid), data.usuario_id)
   }
 
   async list(filters: ListLancamentoFilter) {
-    const whereClauses: string[] = []
-    const params: any[] = []
-
-    if (filters.usuario_id !== undefined) {
-      whereClauses.push('l.usuario_id = ?')
-      params.push(filters.usuario_id)
-    }
+    const whereClauses = ['l.usuario_id = ?']
+    const params: (number | string)[] = [filters.usuario_id]
 
     if (filters.categoria_id !== undefined) {
       whereClauses.push('l.categoria_id = ?')
@@ -130,7 +125,7 @@ export class LancamentoService {
       params.push(filters.forma_pagamento)
     }
 
-    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''
+    const whereSql = `WHERE ${whereClauses.join(' AND ')}`
 
     const countStmt = db.prepare(`
       SELECT COUNT(*) as total
@@ -141,7 +136,7 @@ export class LancamentoService {
 
     const queryParams = [...params, filters.limit, filters.offset]
     const listStmt = db.prepare(`
-      SELECT 
+      SELECT
         l.id,
         l.usuario_id,
         l.categoria_id,
@@ -169,9 +164,9 @@ export class LancamentoService {
     }
   }
 
-  async getById(id: number) {
+  async getById(id: number, usuarioId: number) {
     const stmt = db.prepare(`
-      SELECT 
+      SELECT
         l.id,
         l.usuario_id,
         l.categoria_id,
@@ -185,17 +180,17 @@ export class LancamentoService {
         l.criado_em
       FROM lancamentos l
       JOIN categorias c ON c.id = l.categoria_id
-      WHERE l.id = ?
+      WHERE l.id = ? AND l.usuario_id = ?
     `)
-    const item = stmt.get(id)
+    const item = stmt.get(id, usuarioId)
     if (!item) {
       throw new NotFoundError('Lançamento não encontrado')
     }
     return item
   }
 
-  async update(id: number, data: UpdateLancamentoDTO) {
-    const current = (await this.getById(id)) as Lancamento
+  async update(id: number, usuarioId: number, data: UpdateLancamentoDTO) {
+    const current = (await this.getById(id, usuarioId)) as Lancamento
 
     const tipoFinal = data.tipo !== undefined ? data.tipo : current.tipo
     let formaPagamentoFinal = data.forma_pagamento !== undefined ? data.forma_pagamento : current.forma_pagamento
@@ -242,28 +237,16 @@ export class LancamentoService {
       values.push(data.observacao ? data.observacao.trim() : null)
     }
 
-    values.push(id)
-    const sql = `UPDATE lancamentos SET ${updates.join(', ')} WHERE id = ?`
+    values.push(id, usuarioId)
+    const sql = `UPDATE lancamentos SET ${updates.join(', ')} WHERE id = ? AND usuario_id = ?`
     db.prepare(sql).run(...values)
 
-    return this.getById(id)
+    return this.getById(id, usuarioId)
   }
 
-  async delete(id: number, usuarioId?: number) {
-    if (usuarioId !== undefined) {
-      const stmt = db.prepare(`
-        DELETE FROM lancamentos WHERE id = :lancamento_id AND usuario_id = :usuario_id
-      `)
-      const result = stmt.run({ lancamento_id: id, usuario_id: usuarioId })
-      if (result.changes === 0) {
-        throw new NotFoundError('Lançamento não encontrado para este usuário')
-      }
-      return { success: true }
-    }
-
-    await this.getById(id)
-    const stmt = db.prepare('DELETE FROM lancamentos WHERE id = ?')
-    stmt.run(id)
+  async delete(id: number, usuarioId: number) {
+    const result = db.prepare('DELETE FROM lancamentos WHERE id = ? AND usuario_id = ?').run(id, usuarioId)
+    if (result.changes === 0) throw new NotFoundError('Lançamento não encontrado')
     return { success: true }
   }
 }

@@ -37,23 +37,19 @@ export interface EvolucaoMensalItem {
 }
 
 export interface SaldoQuery {
-  usuario_id: number;
   ate_data: string;
 }
 
 export interface MesRangeQuery {
-  usuario_id: number;
   inicio_mes: string;
   proximo_mes: string;
 }
 
 export interface RecentesQuery {
-  usuario_id: number;
   ate_data: string;
   limite?: number;
 }
 
 export interface EvolucaoQuery {
-  usuario_id: number;
   inicio_mes: string;
 }

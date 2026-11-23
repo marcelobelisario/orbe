@@ -3,7 +3,6 @@ import { z } from 'zod'
 import { categoriaService } from '../services/categoriaService'
 
 const createCategoriaSchema = z.object({
-  usuario_id: z.coerce.number().int().positive('ID do usuário deve ser um inteiro positivo'),
   tipo: z.enum(['renda', 'gasto'], { error: 'Tipo deve ser renda ou gasto' }),
   nome: z.string().trim().min(1, 'Nome não pode ser vazio'),
 })
@@ -18,7 +17,6 @@ const idParamSchema = z.object({
 })
 
 const listCategoriaQuerySchema = z.object({
-  usuario_id: z.coerce.number().int().positive().optional(),
   tipo: z.enum(['renda', 'gasto']).optional(),
   nome: z.string().trim().optional(),
   limit: z.coerce.number().int().positive().max(100).default(20),
@@ -28,32 +26,32 @@ const listCategoriaQuerySchema = z.object({
 export class CategoriaController {
   async create(request: FastifyRequest, reply: FastifyReply) {
     const data = createCategoriaSchema.parse(request.body)
-    const categoria = await categoriaService.create(data)
+    const categoria = await categoriaService.create({ ...data, usuario_id: Number(request.user.sub) })
     return reply.status(201).send(categoria)
   }
 
   async list(request: FastifyRequest, reply: FastifyReply) {
     const query = listCategoriaQuerySchema.parse(request.query)
-    const result = await categoriaService.list(query)
+    const result = await categoriaService.list({ ...query, usuario_id: Number(request.user.sub) })
     return reply.status(200).send(result)
   }
 
   async getById(request: FastifyRequest, reply: FastifyReply) {
     const { id } = idParamSchema.parse(request.params)
-    const item = await categoriaService.getById(id)
+    const item = await categoriaService.getById(id, Number(request.user.sub))
     return reply.status(200).send(item)
   }
 
   async update(request: FastifyRequest, reply: FastifyReply) {
     const { id } = idParamSchema.parse(request.params)
     const data = updateCategoriaSchema.parse(request.body)
-    const updated = await categoriaService.update(id, data)
+    const updated = await categoriaService.update(id, Number(request.user.sub), data)
     return reply.status(200).send(updated)
   }
 
   async delete(request: FastifyRequest, reply: FastifyReply) {
     const { id } = idParamSchema.parse(request.params)
-    await categoriaService.delete(id)
+    await categoriaService.delete(id, Number(request.user.sub))
     return reply.status(204).send()
   }
 }

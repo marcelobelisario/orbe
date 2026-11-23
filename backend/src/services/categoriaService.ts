@@ -23,7 +23,7 @@ export interface UpdateCategoriaDTO {
 }
 
 export interface ListCategoriaFilter {
-  usuario_id?: number
+  usuario_id: number
   tipo?: CategoriaTipo
   nome?: string
   limit: number
@@ -38,17 +38,12 @@ export class CategoriaService {
     `)
 
     const result = stmt.run(data.usuario_id, data.tipo, data.nome.trim())
-    return this.getById(Number(result.lastInsertRowid))
+    return this.getById(Number(result.lastInsertRowid), data.usuario_id)
   }
 
   async list(filters: ListCategoriaFilter) {
-    const whereClauses: string[] = []
-    const params: any[] = []
-
-    if (filters.usuario_id !== undefined) {
-      whereClauses.push('usuario_id = ?')
-      params.push(filters.usuario_id)
-    }
+    const whereClauses = ['usuario_id = ?']
+    const params: (number | string)[] = [filters.usuario_id]
 
     if (filters.tipo !== undefined) {
       whereClauses.push('tipo = ?')
@@ -60,7 +55,7 @@ export class CategoriaService {
       params.push(`%${filters.nome.trim()}%`)
     }
 
-    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''
+    const whereSql = `WHERE ${whereClauses.join(' AND ')}`
 
     const countStmt = db.prepare(`SELECT COUNT(*) as total FROM categorias ${whereSql}`)
     const total = (countStmt.get(...params) as { total: number }).total
@@ -83,22 +78,20 @@ export class CategoriaService {
     }
   }
 
-  async getById(id: number) {
+  async getById(id: number, usuarioId: number) {
     const stmt = db.prepare(`
       SELECT id, usuario_id, tipo, nome, criado_em
       FROM categorias
-      WHERE id = ?
+      WHERE id = ? AND usuario_id = ?
     `)
-    const item = stmt.get(id)
+    const item = stmt.get(id, usuarioId)
     if (!item) {
       throw new NotFoundError('Categoria não encontrada')
     }
     return item
   }
 
-  async update(id: number, data: UpdateCategoriaDTO) {
-    await this.getById(id)
-
+  async update(id: number, usuarioId: number, data: UpdateCategoriaDTO) {
     const updates: string[] = []
     const values: any[] = []
 
@@ -113,18 +106,17 @@ export class CategoriaService {
     }
 
     if (updates.length > 0) {
-      values.push(id)
-      const sql = `UPDATE categorias SET ${updates.join(', ')} WHERE id = ?`
+      values.push(id, usuarioId)
+      const sql = `UPDATE categorias SET ${updates.join(', ')} WHERE id = ? AND usuario_id = ?`
       db.prepare(sql).run(...values)
     }
 
-    return this.getById(id)
+    return this.getById(id, usuarioId)
   }
 
-  async delete(id: number) {
-    await this.getById(id)
-    const stmt = db.prepare('DELETE FROM categorias WHERE id = ?')
-    stmt.run(id)
+  async delete(id: number, usuarioId: number) {
+    const result = db.prepare('DELETE FROM categorias WHERE id = ? AND usuario_id = ?').run(id, usuarioId)
+    if (result.changes === 0) throw new NotFoundError('Categoria não encontrada')
     return { success: true }
   }
 }

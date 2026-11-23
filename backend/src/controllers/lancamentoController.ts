@@ -6,7 +6,6 @@ const dateRegex = /^\d{4}-\d{2}-\d{2}$/
 
 const createLancamentoSchema = z
   .object({
-    usuario_id: z.coerce.number().int().positive('ID do usuário deve ser um inteiro positivo'),
     categoria_id: z.coerce.number().int().positive('ID da categoria deve ser um inteiro positivo'),
     tipo: z.enum(['renda', 'gasto'], { error: 'Tipo deve ser renda ou gasto' }),
     valor_centavos: z.coerce.number().int().positive('Valor deve ser um inteiro positivo em centavos'),
@@ -55,12 +54,7 @@ const idParamSchema = z.object({
   id: z.coerce.number().int().positive('ID deve ser um inteiro positivo'),
 })
 
-const deleteQuerySchema = z.object({
-  usuario_id: z.coerce.number().int().positive().optional(),
-})
-
 const listLancamentoQuerySchema = z.object({
-  usuario_id: z.coerce.number().int().positive().optional(),
   categoria_id: z.coerce.number().int().positive().optional(),
   tipo: z.enum(['renda', 'gasto']).optional(),
   data_inicio: z.string().regex(dateRegex).optional(),
@@ -73,33 +67,32 @@ const listLancamentoQuerySchema = z.object({
 export class LancamentoController {
   async create(request: FastifyRequest, reply: FastifyReply) {
     const data = createLancamentoSchema.parse(request.body)
-    const lancamento = await lancamentoService.create(data)
+    const lancamento = await lancamentoService.create({ ...data, usuario_id: Number(request.user.sub) })
     return reply.status(201).send(lancamento)
   }
 
   async list(request: FastifyRequest, reply: FastifyReply) {
     const query = listLancamentoQuerySchema.parse(request.query)
-    const result = await lancamentoService.list(query)
+    const result = await lancamentoService.list({ ...query, usuario_id: Number(request.user.sub) })
     return reply.status(200).send(result)
   }
 
   async getById(request: FastifyRequest, reply: FastifyReply) {
     const { id } = idParamSchema.parse(request.params)
-    const item = await lancamentoService.getById(id)
+    const item = await lancamentoService.getById(id, Number(request.user.sub))
     return reply.status(200).send(item)
   }
 
   async update(request: FastifyRequest, reply: FastifyReply) {
     const { id } = idParamSchema.parse(request.params)
     const data = updateLancamentoSchema.parse(request.body)
-    const updated = await lancamentoService.update(id, data)
+    const updated = await lancamentoService.update(id, Number(request.user.sub), data)
     return reply.status(200).send(updated)
   }
 
   async delete(request: FastifyRequest, reply: FastifyReply) {
     const { id } = idParamSchema.parse(request.params)
-    const { usuario_id } = deleteQuerySchema.parse(request.query)
-    await lancamentoService.delete(id, usuario_id)
+    await lancamentoService.delete(id, Number(request.user.sub))
     return reply.status(204).send()
   }
 }

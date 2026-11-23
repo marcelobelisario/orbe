@@ -1,5 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { z } from 'zod'
+import { NotFoundError } from '../middlewares/errorHandler'
 import { usuarioService } from '../services/usuarioService'
 
 const createUsuarioSchema = z.object({
@@ -28,6 +29,14 @@ const listUsuarioQuerySchema = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 })
 
+function getOwnAccountId(request: FastifyRequest) {
+  const { id } = idParamSchema.parse(request.params)
+  if (id !== Number(request.user.sub)) {
+    throw new NotFoundError('Usuário não encontrado')
+  }
+  return id
+}
+
 export class UsuarioController {
   async create(request: FastifyRequest, reply: FastifyReply) {
     const data = createUsuarioSchema.parse(request.body)
@@ -37,25 +46,25 @@ export class UsuarioController {
 
   async list(request: FastifyRequest, reply: FastifyReply) {
     const query = listUsuarioQuerySchema.parse(request.query)
-    const result = await usuarioService.list(query)
+    const result = await usuarioService.list(Number(request.user.sub), query)
     return reply.status(200).send(result)
   }
 
   async getById(request: FastifyRequest, reply: FastifyReply) {
-    const { id } = idParamSchema.parse(request.params)
+    const id = getOwnAccountId(request)
     const user = await usuarioService.getById(id)
     return reply.status(200).send(user)
   }
 
   async update(request: FastifyRequest, reply: FastifyReply) {
-    const { id } = idParamSchema.parse(request.params)
+    const id = getOwnAccountId(request)
     const data = updateUsuarioSchema.parse(request.body)
     const updated = await usuarioService.update(id, data)
     return reply.status(200).send(updated)
   }
 
   async delete(request: FastifyRequest, reply: FastifyReply) {
-    const { id } = idParamSchema.parse(request.params)
+    const id = getOwnAccountId(request)
     await usuarioService.delete(id)
     return reply.status(204).send()
   }
@@ -63,10 +72,7 @@ export class UsuarioController {
   async login(request: FastifyRequest, reply: FastifyReply) {
     const data = loginSchema.parse(request.body)
     const user = await usuarioService.authenticate(data.email, data.senha)
-    const token = (request.server as any).jwt.sign(
-      { sub: user.id, email: user.email },
-      { expiresIn: '7d' }
-    )
+    const token = await reply.jwtSign({ sub: String(user.id), accountCreatedAt: user.criado_em })
     return reply.status(200).send({ user, token })
   }
 }

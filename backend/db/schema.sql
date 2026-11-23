@@ -1,7 +1,7 @@
 -- Ative foreign_keys em CADA conexão, antes de iniciar transações.
 PRAGMA foreign_keys = ON;
 
-BEGIN IMMEDIATE;
+SAVEPOINT orbe_schema;
 
 CREATE TABLE usuarios (
     id INTEGER PRIMARY KEY,
@@ -56,4 +56,4 @@ CREATE INDEX idx_lancamentos_categoria_usuario_tipo
     ON lancamentos(categoria_id, usuario_id, tipo);
 
 PRAGMA user_version = 1;
-COMMIT;
+RELEASE orbe_schema;
