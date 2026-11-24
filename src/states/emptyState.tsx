@@ -2,11 +2,13 @@ import {router} from "expo-router";
 import {StyleSheet, Text, View} from "react-native";
 import FormScreen from "@/components/formScreen";
 import {Btn, Icon} from "@/components";
+import {useAuth} from "@/contexts/auth";
 import {useTheme} from "@/theme/themeProvider";
 import {fonts} from "@/theme/tokens";
 
 export default function EmptyState() {
     const {colors} = useTheme();
+    const {isDemo, signOut} = useAuth();
     return (
         <FormScreen contentStyle={styles.content}>
             <View style={[styles.icon, {backgroundColor: colors.surface, borderColor: colors.border}]}>
@@ -24,10 +26,10 @@ export default function EmptyState() {
                 onPress={() => router.push("/new-entry/select")}
             />
             <Btn
-                label="Voltar"
+                label={isDemo ? "Voltar à demonstração" : "Sair"}
                 size="small"
                 variant="secondary"
-                onPress={() => router.replace("/demo")}
+                onPress={isDemo ? () => router.replace("/demo") : signOut}
                 style={styles.back}
             />
         </FormScreen>

@@ -9,26 +9,24 @@ import {
     Text,
     View,
 } from "react-native";
-import {router, useLocalSearchParams} from "expo-router";
+import {Redirect, router, useLocalSearchParams} from "expo-router";
 import {Btn, FormInput, Icon} from "@/components";
 import FormScreen from "@/components/formScreen";
 import {OrbeLogo} from "@/components/OrbeLogo";
 import {useTheme} from "@/theme/themeProvider";
 import {fonts, radii} from "@/theme/tokens";
+import {useAuth} from "@/contexts/auth";
 import {LoginForm} from "./LoginForm";
 import {isValidEmail} from "./validation";
 
 export default function IdentityScreen() {
     const {colors, theme, setTheme} = useTheme();
+    const {user, token, isDemo, signInDemo} = useAuth();
     const {registered} = useLocalSearchParams<{ registered?: string }>();
     const [forgotModalVisible, setForgotModalVisible] = useState(false);
     const [recoveryEmail, setRecoveryEmail] = useState("");
     const [recoveryError, setRecoveryError] = useState("");
     const [recoveryNotice, setRecoveryNotice] = useState("");
-
-    function openDashboard() {
-        router.replace("/dashboard");
-    }
 
     function openRecovery() {
         setRecoveryEmail("");
@@ -46,6 +44,8 @@ export default function IdentityScreen() {
         setRecoveryNotice("Esta é uma demonstração. Nenhum e-mail foi enviado.");
     }
 
+    if (isDemo || (user && token)) return <Redirect href="/dashboard"/>;
+
     return (
         <>
             <FormScreen contentStyle={styles.content}>
@@ -62,13 +62,12 @@ export default function IdentityScreen() {
                 </View>
                 {registered === "1" ? (
                     <Text accessibilityLiveRegion="polite" style={[styles.notice, {color: colors.income}]}>
-                        Cadastro validado na demonstração. Entre para continuar.
+                        Conta criada com sucesso! Faça login para continuar.
                     </Text>
                 ) : null}
                 <LoginForm
-                    onSuccess={openDashboard}
                     onForgotPassword={openRecovery}
-                    onExploreDemo={openDashboard}
+                    onExploreDemo={signInDemo}
                 />
                 <View style={styles.footer}>
                     <Text style={[styles.footerText, {color: colors.muted}]}>Ainda não tem uma conta?</Text>
@@ -131,7 +130,7 @@ export default function IdentityScreen() {
                             ) : null}
                             <Btn label="Enviar link de recuperação" onPress={handleRecovery}/>
                             <Btn
-                                label="Voltar ao login"
+                                label="Sair"
                                 variant="secondary"
                                 onPress={() => setForgotModalVisible(false)}
                             />

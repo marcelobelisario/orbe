@@ -1,5 +1,6 @@
 import {ValueVisibilityProvider} from "@/contexts/valueVisibility";
 import {TransactionsProvider} from "@/contexts/transactions";
+import {AuthProvider, useAuth} from "@/contexts/auth";
 import {Stack} from "expo-router";
 import {StatusBar} from "expo-status-bar";
 
@@ -10,6 +11,7 @@ import {ErrorState} from "@/components/errorState";
 
 function Navigation() {
     const {colors, theme} = useTheme();
+    const {user, token, isDemo} = useAuth();
     const [loaded, error] = useComponentFonts();
     if (error)
         return (
@@ -30,15 +32,19 @@ function Navigation() {
                 }}
             >
                 <Stack.Screen name="index" options={{title: "Entrar", headerShown: false}}/>
-                <Stack.Screen name="dashboard" options={{title: "Dashboard", headerShown: false}}/>
                 <Stack.Screen name="register" options={{headerShown: false}}/>
-                <Stack.Screen name="demo" options={{headerShown: false}}/>
-                <Stack.Screen name="loading" options={{headerShown: false}}/>
-                <Stack.Screen name="statement" options={{title: "Extrato"}}/>
-                <Stack.Screen name="new-entry/select" options={{headerShown: false}}/>
-                <Stack.Screen name="new-entry/income" options={{headerShown: false}}/>
-                <Stack.Screen name="new-entry/expense" options={{headerShown: false}}/>
-                <Stack.Screen name="error" options={{title: "Erro", headerShown: false}}/>
+                <Stack.Protected guard={isDemo || Boolean(user && token)}>
+                    <Stack.Screen name="dashboard" options={{title: "Dashboard", headerShown: false}}/>
+                    <Stack.Screen name="statement" options={{title: "Extrato"}}/>
+                    <Stack.Screen name="new-entry/select" options={{headerShown: false}}/>
+                    <Stack.Screen name="new-entry/income" options={{headerShown: false}}/>
+                    <Stack.Screen name="new-entry/expense" options={{headerShown: false}}/>
+                </Stack.Protected>
+                <Stack.Protected guard={isDemo}>
+                    <Stack.Screen name="demo" options={{headerShown: false}}/>
+                    <Stack.Screen name="loading" options={{headerShown: false}}/>
+                    <Stack.Screen name="error" options={{title: "Erro", headerShown: false}}/>
+                </Stack.Protected>
             </Stack>
         </>
     );
@@ -47,11 +53,13 @@ function Navigation() {
 export default function RootLayout() {
     return (
         <ThemeProvider>
-            <ValueVisibilityProvider>
-                <TransactionsProvider>
-                    <Navigation/>
-                </TransactionsProvider>
-            </ValueVisibilityProvider>
+            <AuthProvider>
+                <ValueVisibilityProvider>
+                    <TransactionsProvider>
+                        <Navigation/>
+                    </TransactionsProvider>
+                </ValueVisibilityProvider>
+            </AuthProvider>
         </ThemeProvider>
     );
 }

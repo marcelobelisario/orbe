@@ -55,6 +55,28 @@ test("comparação e histórico acompanham o mês selecionado", () => {
     assert.equal(result.history[4].expenses, 3000);
 });
 
+test("saldo disponível inclui meses anteriores e exclui lançamentos após hoje", () => {
+    const today = new Date(2027, 0, 31, 12);
+    const january = getDashboardSummary(entries, "2027-01", today);
+    const february = getDashboardSummary(entries, "2027-02", today);
+
+    assert.equal(january.availableBalance, 126999);
+    assert.equal(february.availableBalance, january.availableBalance);
+    assert.equal(february.expenses, 5000);
+});
+
+test("o painel agrupa gastos e ordena os três lançamentos mais recentes do mês", () => {
+    const result = getDashboardSummary([
+        ...entries,
+        entry(6, "2027-01-31", "expense", 4000),
+        {...entry(7, "2027-01-03", "expense", 1000), category: "Pets"},
+    ], "2027-01");
+
+    assert.deepEqual(result.expensesByCategory, [{name: "Outros", value: 7000}, {name: "Pets", value: 1000}]);
+    assert.deepEqual(result.recentTransactions.map(({id}) => id), [6, 3, 7]);
+    assert.equal(result.isAboveCommitmentGoal, true);
+});
+
 test("mês vazio e gasto sem renda não produzem NaN nem percentuais enganosos", () => {
     const empty = getDashboardSummary(entries, "2027-03");
     assert.equal(empty.income, 0);

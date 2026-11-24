@@ -3,24 +3,43 @@ import {Pressable, StyleSheet, Text, View} from "react-native";
 import {Btn, FormInput} from "@/components";
 import {useTheme} from "@/theme/themeProvider";
 import {fonts} from "@/theme/tokens";
+import {useAuth} from "@/contexts/auth";
 import {validateLogin} from "./validation";
 
 type LoginFormProps = {
-    onSuccess: () => void;
     onForgotPassword: () => void;
     onExploreDemo: () => void;
 };
 
-export function LoginForm({onSuccess, onForgotPassword, onExploreDemo}: LoginFormProps) {
+export function LoginForm({onForgotPassword, onExploreDemo}: LoginFormProps) {
     const {colors} = useTheme();
+    const {signIn} = useAuth();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+    const [loginError, setLoginError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
-    function handleLogin() {
+    async function handleLogin() {
+        if (isLoading) return;
+        setLoginError("");
         const nextErrors = validateLogin(email, password);
         setErrors(nextErrors);
-        if (!Object.keys(nextErrors).length) onSuccess();
+        if (Object.keys(nextErrors).length > 0) return;
+
+        setIsLoading(true);
+        try {
+            await signIn({ email: email.trim(), senha: password });
+        } catch (err: any) {
+            const message =
+                err?.response?.data?.message ||
+                (err?.response?.status === 401
+                    ? "E-mail ou senha inválidos."
+                    : "Erro ao autenticar. Verifique sua conexão.");
+            setLoginError(message);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -41,6 +60,7 @@ export function LoginForm({onSuccess, onForgotPassword, onExploreDemo}: LoginFor
                     onChangeText={(value) => {
                         setEmail(value);
                         setErrors((current) => ({...current, email: undefined}));
+                        setLoginError("");
                     }}
                     keyboardType="email-address"
                     autoCapitalize="none"
@@ -55,6 +75,7 @@ export function LoginForm({onSuccess, onForgotPassword, onExploreDemo}: LoginFor
                     onChangeText={(value) => {
                         setPassword(value);
                         setErrors((current) => ({...current, password: undefined}));
+                        setLoginError("");
                     }}
                     isPassword
                     autoCapitalize="none"
@@ -73,8 +94,18 @@ export function LoginForm({onSuccess, onForgotPassword, onExploreDemo}: LoginFor
             >
                 <Text style={[styles.recoveryText, {color: colors.primary}]}>Esqueceu a senha?</Text>
             </Pressable>
-            <Btn label="Entrar" onPress={handleLogin}/>
-            <Pressable onPress={onExploreDemo} accessibilityRole="button" style={styles.demo}>
+            {loginError ? (
+                <Text accessibilityLiveRegion="polite" style={[styles.errorNotice, {color: colors.expense}]}>
+                    {loginError}
+                </Text>
+            ) : null}
+            <Btn label="Entrar" onPress={handleLogin} loading={isLoading} />
+            <Pressable
+                onPress={onExploreDemo}
+                accessibilityRole="button"
+                style={styles.demo}
+                disabled={isLoading}
+            >
                 <Text style={[styles.demoText, {color: colors.muted}]}>Explorar demonstração</Text>
             </Pressable>
         </View>
@@ -89,6 +120,7 @@ const styles = StyleSheet.create({
     fields: {gap: 18},
     recovery: {minHeight: 20, alignItems: "flex-end", justifyContent: "center"},
     recoveryText: {fontFamily: fonts.semibold, fontSize: 12, lineHeight: 20},
+    errorNotice: {fontFamily: fonts.regular, fontSize: 13, lineHeight: 18, textAlign: "center"},
     demo: {minHeight: 44, justifyContent: "center", alignItems: "center"},
     demoText: {fontFamily: fonts.medium, fontSize: 12, lineHeight: 20},
 });

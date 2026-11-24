@@ -1,0 +1,5 @@
+export * from './usuarioRoutes'
+export * from './categoriaRoutes'
+export * from './lancamentoRoutes'
+export * from './consultaRoutes'
+export * from './server'

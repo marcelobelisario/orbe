@@ -15,9 +15,11 @@ import {
     TransactionItem,
     ValueVisibilityButton,
 } from "@/components";
+import {ErrorState} from "@/components/errorState";
 import {useValueVisibility} from "@/contexts/valueVisibility";
 import {categories, formatMoney} from "@/data/finance";
 import {useTransactions} from "@/contexts/transactions";
+import {useAuth} from "@/contexts/auth";
 import {useTheme} from "@/theme/themeProvider";
 import {fonts, radii} from "@/theme/tokens";
 import LoadingState from "@/states/loadingState";
@@ -34,19 +36,28 @@ function Card({children}: PropsWithChildren) {
 
 export default function Dashboard() {
     const {state} = useLocalSearchParams<{ state?: string }>();
-    const {transactions} = useTransactions();
+    const {isDemo, signOut} = useAuth();
+    const {transactions, isLoading, error, refreshTransactions} = useTransactions();
+    const simulateLoading = isDemo && state === "loading";
     useEffect(() => {
-        if (state !== "loading") return;
+        if (!simulateLoading) return;
         const timer = setTimeout(() => router.replace("/dashboard"), 2000);
         return () => clearTimeout(timer);
-    }, [state]);
-    if (state === "loading") return <LoadingState/>;
+    }, [simulateLoading]);
+    if (simulateLoading || isLoading) return <LoadingState/>;
+    if (error) return (
+        <SafeAreaView>
+            <ErrorState message={error} onRetry={refreshTransactions}/>
+            <Btn label="Sair" variant="secondary" onPress={signOut}/>
+        </SafeAreaView>
+    );
     if (transactions.length === 0) return <EmptyState/>;
     return <DashboardContent/>;
 }
 
 function DashboardContent() {
     const {transactions} = useTransactions();
+    const {user, isDemo, signOut} = useAuth();
     const {colors} = useTheme();
     const {width, fontScale} = useWindowDimensions();
     const {valuesVisible} = useValueVisibility();
@@ -56,27 +67,25 @@ function DashboardContent() {
     const [selectedMonth, setSelectedMonth] = useState(getMonthKey);
     const monthOptions = getMonthOptions(transactions, getMonthKey());
 
-    // Todos os indicadores usam somente os lançamentos do mês selecionado.
+    const displayName = isDemo ? "Demonstração" : user?.nome_completo;
+    const firstName = displayName?.trim().split(/\s+/)[0] || "Usuário";
+    const avatarInitial = firstName.charAt(0).toUpperCase() || "U";
+
     const summary = getDashboardSummary(transactions, selectedMonth);
-    const {income, expenses, balance, commitment, incomeChange, expenseChange} = summary;
+    const {income, expenses, availableBalance, commitment, incomeChange, expenseChange} = summary;
     const previousMonthLabel = formatMonth(summary.previousMonth).toLowerCase();
     const percentage = valuesVisible
         ? commitment === null
             ? "Sem renda"
             : `${commitment.toFixed(1).replace(".", ",")}%`
         : "••••";
-    const distribution = categories
-        .map((category) => ({
-            ...category,
-            value: summary.entries
-                .filter((item) => item.type === "expense" && item.category === category.name)
-                .reduce((sum, item) => sum + item.amount, 0),
-        }))
-        .filter((category) => category.value > 0);
+    const distribution = summary.expensesByCategory.map((category) => ({
+        ...category,
+        color: categories.find(({name}) => name === category.name)?.color ?? colors.muted,
+    }));
     const months = summary.history;
     const hasHistory = months.some((month) => month.income > 0 || month.expenses > 0);
-    const recent = [...summary.entries].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
-    const visibleTransactions = recent.slice(0, 3);
+    const visibleTransactions = summary.recentTransactions;
     const displayMoney = (amount: number) => (valuesVisible ? formatMoney(amount) : "••••");
 
     return (
@@ -85,7 +94,7 @@ function DashboardContent() {
                 <View style={styles.content}>
                     <View style={styles.header}>
                         <View style={styles.flex}>
-                            <Text style={[styles.body, {color: colors.muted}]}>Bom dia, Ana 👋</Text>
+                            <Text style={[styles.body, {color: colors.muted}]}>Bom dia, {firstName} 👋</Text>
                             <MonthSelect
                                 value={selectedMonth}
                                 onChange={setSelectedMonth}
@@ -109,7 +118,7 @@ function DashboardContent() {
                                 hitSlop={4}
                             >
                                 <LinearGradient colors={[colors.primary, "#6366f1"]} style={styles.avatar}>
-                                    <Text style={styles.avatarText}>A</Text>
+                                    <Text style={styles.avatarText}>{avatarInitial}</Text>
                                 </LinearGradient>
                             </Pressable>
                         </View>
@@ -117,15 +126,17 @@ function DashboardContent() {
                     {showTheme && (
                         <View style={{gap: 12}}>
                             <ThemeToggle/>
+                            {isDemo && (
+                                <Btn
+                                    label="Demonstração e estados da tela"
+                                    variant="secondary"
+                                    onPress={() => router.push("/demo")}
+                                />
+                            )}
                             <Btn
-                                label="Demonstração e estados da tela"
+                                label="Sair"
                                 variant="secondary"
-                                onPress={() => router.push("/demo")}
-                            />
-                            <Btn
-                                label="Voltar ao login"
-                                variant="secondary"
-                                onPress={() => router.replace("/")}
+                                onPress={signOut}
                             />
                         </View>
                     )}
@@ -149,7 +160,7 @@ function DashboardContent() {
                             <Text style={styles.balanceLabel}>Saldo disponível</Text>
                         </View>
                         <View style={styles.balanceEye}><ValueVisibilityButton/></View>
-                        <Text style={styles.balanceValue}>{displayMoney(balance)}</Text>
+                        <Text style={styles.balanceValue}>{displayMoney(availableBalance)}</Text>
                         <View style={[styles.balanceDetails, compact && styles.column]}>
                             <View style={styles.flex}>
                                 <Text style={styles.balanceCaption}>Renda</Text>
@@ -219,7 +230,7 @@ function DashboardContent() {
                             <Text
                                 style={[
                                     styles.percentage,
-                                    {color: commitment !== null && commitment > 50 ? colors.expense : colors.income},
+                                    {color: summary.isAboveCommitmentGoal ? colors.expense : colors.income},
                                 ]}
                             >
                                 {percentage}
@@ -422,9 +433,9 @@ function DashboardContent() {
                                             : commitment === null
                                                 ? "Há gastos registrados, mas nenhuma renda neste mês."
                                                 : `Você utilizou ${percentage} da renda. ${
-                                                    commitment <= 50
-                                                        ? "Seus gastos estão dentro da meta de 50%."
-                                                        : "Seus gastos ultrapassaram a meta de 50%."
+                                                    summary.isAboveCommitmentGoal
+                                                        ? "Seus gastos ultrapassaram a meta de 50%."
+                                                        : "Seus gastos estão dentro da meta de 50%."
                                                 }`}
                                 </Text>
                             </View>

@@ -1,5 +1,6 @@
 import {useLocalSearchParams, router} from "expo-router";
-import {useState} from "react";
+import {useRef, useState} from "react";
+import {isAxiosError} from "axios";
 import {StyleSheet, Text, TextInput, View} from "react-native";
 import {
     Btn,
@@ -38,31 +39,48 @@ export default function EntryForm({type}: { type: "income" | "expense" }) {
     const [paymentMethod, setPaymentMethod] = useState("");
     const [notes, setNotes] = useState("");
     const [saving, setSaving] = useState(false);
+    const savePending = useRef(false);
+    const [saveError, setSaveError] = useState("");
     const [submitted, setSubmitted] = useState(false);
     const errors = validateEntry({amount, description, category, date, paymentMethod}, isIncome);
     const accent = isIncome ? colors.income : colors.expense;
     const surface = isIncome ? colors.incomeSurface : colors.expenseSurface;
 
-    function handleSave() {
+    async function handleSave() {
         setSubmitted(true);
-        if (saving || Object.keys(errors).length) return;
+        if (savePending.current || Object.keys(errors).length) return;
         const selected = options.find((item) => item.value === category);
         const isoDate = dateToISO(date);
         if (!selected || !isoDate) return;
+        savePending.current = true;
         setSaving(true);
-        addTransaction({
-            type,
-            description: description.trim(),
-            category: selected.label,
-            emoji: selected.emoji,
-            date: isoDate,
-            amount: parseAmount(amount),
-            notes: notes.trim() || undefined,
-            paymentMethod: isIncome
-                ? undefined
-                : paymentMethods.find((item) => item.value === paymentMethod)?.label,
-        });
-        router.dismissTo("/dashboard");
+        setSaveError("");
+        try {
+            await addTransaction({
+                type,
+                description: description.trim(),
+                category: selected.label,
+                emoji: selected.emoji,
+                date: isoDate,
+                amount: parseAmount(amount),
+                notes: notes.trim() || undefined,
+                paymentMethod: isIncome
+                    ? undefined
+                    : paymentMethods.find((item) => item.value === paymentMethod)?.label,
+            });
+            router.dismissTo("/dashboard");
+        } catch (err) {
+            if (isAxiosError(err) && err.response?.status === 401) {
+                setSaveError("Sua sessão expirou. Entre novamente para salvar.");
+            } else if (isAxiosError(err) && !err.response) {
+                setSaveError("Não foi possível confirmar a gravação. Confira o extrato antes de tentar novamente.");
+            } else {
+                setSaveError("Não foi possível salvar o lançamento. Tente novamente.");
+            }
+        } finally {
+            savePending.current = false;
+            setSaving(false);
+        }
     }
 
     return (
@@ -138,6 +156,11 @@ export default function EntryForm({type}: { type: "income" | "expense" }) {
                 multiline
                 maxLength={500}
             />
+            {saveError ? (
+                <Text accessibilityLiveRegion="polite" style={[styles.error, {color: colors.expense}]}>
+                    {saveError}
+                </Text>
+            ) : null}
             <Btn
                 label="Salvar lançamento"
                 size="large"

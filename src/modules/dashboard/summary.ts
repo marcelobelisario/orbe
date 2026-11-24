@@ -55,10 +55,27 @@ export function getMonthlyTotals(entries: Transaction[], month: string) {
     };
 }
 
-export function getDashboardSummary(entries: Transaction[], month: string) {
+export function getDashboardSummary(entries: Transaction[], month: string, today = new Date()) {
     const current = getMonthlyTotals(entries, month);
     const previousMonth = shiftMonth(month, -1);
     const previous = getMonthlyTotals(entries, previousMonth);
+    const todayKey = `${getMonthKey(today)}-${String(today.getDate()).padStart(2, "0")}`;
+    const availableBalance = entries.reduce((total, entry) => {
+        if (entry.date > todayKey) return total;
+        return total + (entry.type === "income" ? entry.amount : -entry.amount);
+    }, 0);
+
+    const categoryTotals = new Map<string, number>();
+    for (const entry of current.entries) {
+        if (entry.type === "expense") {
+            categoryTotals.set(entry.category, (categoryTotals.get(entry.category) ?? 0) + entry.amount);
+        }
+    }
+    const expensesByCategory = Array.from(categoryTotals, ([name, value]) => ({name, value}));
+    const recentTransactions = [...current.entries]
+        .sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id)
+        .slice(0, 3);
+
     const history = Array.from({length: 5}, (_, index) => {
         const key = shiftMonth(month, index - 4);
         const totals = getMonthlyTotals(entries, key);
@@ -71,6 +88,10 @@ export function getDashboardSummary(entries: Transaction[], month: string) {
     });
     return {
         ...current,
+        availableBalance,
+        expensesByCategory,
+        recentTransactions,
+        isAboveCommitmentGoal: current.commitment !== null && current.commitment > 50,
         history,
         previousMonth,
         incomeChange:
