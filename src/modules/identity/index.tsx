@@ -13,6 +13,7 @@ import {Redirect, router, useLocalSearchParams} from "expo-router";
 import {Btn, FormInput, Icon} from "@/components";
 import FormScreen from "@/components/formScreen";
 import {OrbeLogo} from "@/components/OrbeLogo";
+import {LegalLinks} from "@/components/legalLinks";
 import {useTheme} from "@/theme/themeProvider";
 import {fonts, radii} from "@/theme/tokens";
 import {useAuth} from "@/contexts/auth";
@@ -81,6 +82,7 @@ export default function IdentityScreen() {
                         </Text>
                     </Pressable>
                 </View>
+                <LegalLinks showDeletion/>
             </FormScreen>
             <Modal
                 visible={forgotModalVisible}

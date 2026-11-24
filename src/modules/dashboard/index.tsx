@@ -16,6 +16,7 @@ import {
     ValueVisibilityButton,
 } from "@/components";
 import {ErrorState} from "@/components/errorState";
+import {LegalLinks} from "@/components/legalLinks";
 import {useValueVisibility} from "@/contexts/valueVisibility";
 import {categories, formatMoney} from "@/data/finance";
 import {useTransactions} from "@/contexts/transactions";
@@ -138,6 +139,7 @@ function DashboardContent() {
                                 variant="secondary"
                                 onPress={signOut}
                             />
+                            <LegalLinks showDeletion={!isDemo}/>
                         </View>
                     )}
                     {summary.entries.length === 0 && (
