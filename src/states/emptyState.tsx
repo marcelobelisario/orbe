@@ -2,6 +2,7 @@ import {router} from "expo-router";
 import {StyleSheet, Text, View} from "react-native";
 import FormScreen from "@/components/formScreen";
 import {Btn, Icon} from "@/components";
+import {LegalLinks} from "@/components/legalLinks";
 import {useAuth} from "@/contexts/auth";
 import {useTheme} from "@/theme/themeProvider";
 import {fonts} from "@/theme/tokens";
@@ -32,6 +33,7 @@ export default function EmptyState() {
                 onPress={isDemo ? () => router.replace("/demo") : signOut}
                 style={styles.back}
             />
+            <LegalLinks showDeletion={!isDemo}/>
         </FormScreen>
     );
 }

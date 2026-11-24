@@ -94,10 +94,13 @@ export class UsuarioService {
   }
 
   async delete(id: number) {
-    await this.getById(id)
-    const stmt = db.prepare('DELETE FROM usuarios WHERE id = ?')
-    stmt.run(id)
-    return { success: true }
+    return db.transaction(() => {
+      db.prepare('DELETE FROM lancamentos WHERE usuario_id = ?').run(id)
+      db.prepare('DELETE FROM categorias WHERE usuario_id = ?').run(id)
+      const result = db.prepare('DELETE FROM usuarios WHERE id = ?').run(id)
+      if (result.changes === 0) throw new NotFoundError('Usuário não encontrado')
+      return { success: true }
+    })()
   }
 
   async findByEmail(email: string): Promise<Usuario | undefined> {

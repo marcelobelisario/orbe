@@ -4,9 +4,12 @@
     "slug": "orbe",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/brand/icon.png",
     "scheme": "orbe",
     "userInterfaceStyle": "automatic",
     "android": {
+      "package": "com.jvdslabs.orbe",
+      "versionCode": 3,
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -22,7 +25,8 @@
       ],
       "expo-image",
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-web-browser",
+      "./plugins/withOptionalPortrait"
     ],
     "experiments": {
       "typedRoutes": true,

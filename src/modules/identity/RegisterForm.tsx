@@ -2,6 +2,7 @@ import {useState} from "react";
 import {Pressable, StyleSheet, Text, View} from "react-native";
 import {Btn, FormInput, Icon} from "@/components";
 import {PasswordStrengthMeter} from "@/components/PasswordStrengthMeter";
+import {LegalLinks} from "@/components/legalLinks";
 import {useTheme} from "@/theme/themeProvider";
 import {fonts} from "@/theme/tokens";
 import {useAuth} from "@/contexts/auth";
@@ -150,10 +151,10 @@ export function RegisterForm({onSuccess}: { onSuccess: () => void }) {
                     {termsAccepted && <Icon name="check" color="#ffffff"/>}
                 </View>
                 <Text style={[styles.termsText, {color: colors.text}]}>
-                    Li e aceito os <Text style={{color: colors.legalLink}}>Termos de Uso</Text> e{" "}
-                    <Text style={{color: colors.legalLink}}>Política de Privacidade</Text>.
+                    Li e aceito os Termos de Uso e a Política de Privacidade.
                 </Text>
             </Pressable>
+            <LegalLinks/>
             {errors.termsAccepted ? (
                 <Text accessibilityLiveRegion="polite" style={[styles.error, {color: colors.expense}]}>
                     {errors.termsAccepted}
